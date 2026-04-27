@@ -35,8 +35,8 @@ Frontend needs (`.env.local`):
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_DEMO_USER_ID`
 
-Edge Function needs (set via `supabase secrets set`, never in a file):
-- `ANTHROPIC_API_KEY`
+Edge Function needs (set via Supabase dashboard > Settings > Edge Functions > Secrets):
+- `GEMINI_API_KEY`  — get a free key at https://aistudio.google.com/apikey
 
 ## Supabase setup
 
@@ -64,7 +64,7 @@ Connect the repo to Vercel. Set the three `VITE_*` env vars in Vercel project se
 - Hardcoded demo user, no real auth
 - Cash bookings only, no miles+cash UI
 - Seeded fake inventory (not real flights)
-- Claude is called server-side only (Edge Function), never from the browser
+- Gemini Flash is called server-side only (Edge Function), never from the browser
 - Structured JSON output from Claude (not free-form text)
 - Exactly 3 suggestions per query; exactly 1 marked Best Value
 - Conversation history capped at 20 rows (~10 turns) when passed to Claude

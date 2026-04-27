@@ -8,12 +8,13 @@ GitHub repo: https://github.com/dg3496/united-trip-planner
 Supabase project ref: jexqrbxpgxnmwxgkyinn
 
 Next actions (in order):
-1. Apply schema migration via MCP (001_schema.sql)
-2. Seed demo user + destinations + flights (002_seed.sql)
-3. Set ANTHROPIC_API_KEY secret
-4. Deploy chat-trip-planner Edge Function
-5. Get project URL + anon key for .env.local
-6. Smoke test the full flow
+1. ~~Apply schema migration via MCP~~ DONE
+2. ~~Seed demo user + destinations + flights~~ DONE (25 destinations, 70 flights)
+3. Set GEMINI_API_KEY secret -- PENDING (user to add via Supabase dashboard > Settings > Edge Functions > Secrets)
+4. ~~Deploy chat-trip-planner Edge Function~~ DONE (ACTIVE)
+5. ~~Get project URL + anon key for .env.local~~ DONE (in .env.example)
+6. Open PR: backend -> main
+7. Frontend team: copy .env.example to .env.local and run npm run dev
 
 ## Track B Stock Check (2026-04-27)
 
