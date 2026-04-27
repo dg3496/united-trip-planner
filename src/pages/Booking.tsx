@@ -19,7 +19,7 @@ export default function Booking() {
   const fareUsd = params.get('fareUsd') ?? '—'
   const outboundDate = params.get('outboundDate') ?? '—'
   const returnDate = params.get('returnDate') ?? '—'
-  const conversationId = params.get('conversationId')
+  // conversationId available via params.get('conversationId') — Track C wires this up
 
   return (
     <div className="flex flex-col h-full">

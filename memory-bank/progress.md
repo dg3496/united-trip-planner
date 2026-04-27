@@ -29,6 +29,8 @@ This section will be updated as features come online. Format going forward:
 
 > **YYYY-MM-DD:** Feature X works end-to-end. Notes on caveats.
 
+- **2026-04-27:** Home screen (Phase 4) complete on `frontend-track-a`. Visually verified in browser at localhost:5173. Nav, CTA, featured destinations, and resume card all render correctly. Both `frontend` and `frontend-track-a` branches pushed to GitHub.
+
 ## Build Checklist
 
 Items grouped by build phase. Each item references the PRD requirement ID where applicable so traceability between the prototype and the spec is preserved.
@@ -67,11 +69,14 @@ Items grouped by build phase. Each item references the PRD requirement ID where 
 - [ ] User and assistant message persistence
 - [ ] Edge Function deployed and pingable from the frontend
 
-### Phase 4: Home Screen (FR-001, FR-002, FR-003)
-- [ ] United-branded header with logo / wordmark
-- [ ] "Not sure where to go?" banner with prominent CTA into chat (FR-003)
-- [ ] Bottom nav with a "Plan a Trip" tab (FR-002)
-- [ ] Tapping the banner OR the nav opens the chat with a new conversation
+### Phase 4: Home Screen (FR-001, FR-002, FR-003) — COMPLETE (2026-04-27, Track A)
+- [x] United-branded header with logo / wordmark
+- [x] "Not sure where to go?" banner with prominent CTA into chat (FR-003)
+- [x] Bottom nav with a "Plan a Trip" tab (FR-002)
+- [x] Tapping the banner OR the nav opens the chat with a new conversation
+- [x] Resume card shown when active conversation exists in Zustand store
+- [x] Featured destinations section (Cancun, Paris, Honolulu, Tokyo) — static, tap to start new trip
+- [x] Fixed src/index.css (removed Vite default styles conflicting with MobileShell)
 
 ### Phase 5: Chat UI
 - [ ] Welcome message rendered on first open with example prompts (FR-005)

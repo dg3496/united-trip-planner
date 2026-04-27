@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Clock, Plane, Star, Bell, ChevronDown, ChevronUp } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import type { Suggestion } from '../../lib/types'
 import { setPriceAlert } from '../../lib/api'
@@ -14,7 +13,7 @@ interface Props {
 export function DestinationCard({ suggestion, conversationId }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [alertSet, setAlertSet] = useState(false)
-  const navigate = useNavigate()
+
 
   const durationHours = Math.floor(suggestion.flightDurationMinutes / 60)
   const durationMins = suggestion.flightDurationMinutes % 60

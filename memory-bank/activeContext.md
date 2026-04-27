@@ -16,14 +16,20 @@ All three tracks work off the `frontend` branch. Each person should commit to th
 ---
 
 ### Track A — Home Screen + Polish + Deploy
-**Files:** `src/pages/Home.tsx`, `src/index.css`, `src/App.css`, Vercel deploy config
+**Assigned to:** Abhinav
+**Branch:** `frontend-track-a`
+**Files:** `src/pages/Home.tsx`, `src/index.css`, `src/App.css`
 **Phases:** 4 + 9
+**Stack:** React + Vite + TypeScript + Tailwind (no Next.js, no Vercel)
 
 Deliverables:
 - Full United-branded home screen: TopBar with United wordmark, hero/banner area with "Not sure where to go?" CTA (FR-001, FR-003), BottomNav wired (FR-002)
-- Tapping the banner calls `useChatStore().resetConversation()` then navigates to `/chat`
-- Phase 9 polish: smooth page transitions, copy review (no em dashes), navy/white color palette consistent throughout, mobile Safari fixed-bottom bar tested
-- Vercel deploy: set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_DEMO_USER_ID` env vars and confirm public URL works on iPhone 14 viewport (390px)
+- "Resume" card shown when an active conversation exists in Zustand store
+- Featured destinations section (static, tap navigates to /chat)
+- Tapping any CTA calls `useChatStore().resetConversation()` then navigates to `/chat`
+- Fix `src/index.css` root styles (Vite default has width: 1126px that conflicts with MobileShell)
+- Phase 9 polish: copy review (no em dashes), navy/white color palette consistent throughout, mobile Safari tested on 390px viewport
+- Deploy: `npm run build && npm run preview` for local demo. For a public URL use Netlify (drag `dist/` folder) or `npx serve dist`. No Vercel.
 
 ---
 
@@ -55,6 +61,7 @@ Deliverables:
 
 ## Recent Changes
 
+- **2026-04-27:** Track A complete: `src/pages/Home.tsx` fully built (FR-001, FR-002, FR-003). `src/index.css` reset to mobile-first base styles. Visually verified in browser — navy header, Premier Gold badge, AI CTA card, featured destinations, bottom nav all render correctly.
 - **2026-04-27:** `frontend` branch created. Frontend build divided into 3 parallel tracks (A: Home+Polish, B: Chat UI core, C: Cards+Booking+Alerts). See track definitions above.
 - **2026-04-27:** Full project scaffolded and pushed to GitHub (see progress.md for full list).
 - **2026-04-27:** Supabase MCP server connected and authenticated (project ref: jexqrbxpgxnmwxgkyinn).
