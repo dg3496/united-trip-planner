@@ -41,7 +41,7 @@ export function MessageList({ messages, isLoading, conversationId, onExampleSele
       )}
 
       {messages.map((m) => (
-        <MessageBubble key={m.id} message={m} conversationId={conversationId} />
+        <MessageBubble key={m.id} message={m} conversationId={conversationId} onSuggestionSelect={onExampleSelect} />
       ))}
 
       {isLoading && <LoadingIndicator />}

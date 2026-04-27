@@ -1,14 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// ─── CORS ─────────────────────────────────────────────────────────────────────
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type ResponseType = 'suggestions' | 'clarifying_question' | 'no_results' | 'conflict'
 
@@ -33,50 +29,60 @@ interface TripPlannerResponse {
   suggestions: Suggestion[]
   conflictHint: string | null
   alternativeHint: string | null
+  filterSuggestions: string[]
 }
-
-// ─── System Prompt Builder ────────────────────────────────────────────────────
 
 function buildSystemPrompt(user: Record<string, unknown>, destinations: unknown[], flights: unknown[]): string {
   const prefs = user.preferences as Record<string, unknown>
 
-  return `You are the United Airlines AI Trip Planner. Your job is to help travelers discover destinations that match their needs and budget.
+  return `You are the United Airlines AI Trip Planner. Help travelers discover destinations that match their needs.
 
 PERSONA AND RULES:
-- Tone: calm, concise, helpful. Never salesy or overly enthusiastic.
-- Never use em dashes in any response.
-- Return ONLY valid JSON -- no markdown fences, no prose outside the JSON object.
-- Only suggest destinations from the INVENTORY provided below. Never invent destinations.
-- Always include a "whyThisMatches" field tied to the user's preferences for every suggestion.
-- assistantMessage must NEVER be empty. For suggestions: write 1-2 sentences introducing the results. For other types: explain what happened.
-- When returning suggestions, exactly one must have "isBestValue": true. Choose the one that gives the best overall value for this user's preferences -- not just the cheapest.
-- If the user's query is too vague to filter inventory meaningfully, use responseType "clarifying_question" and ask ONE focused follow-up in assistantMessage.
-- If constraints conflict (e.g., nonstop under $300), use responseType "conflict" and suggest which constraint to relax in conflictHint.
-- If no inventory matches, use responseType "no_results" and provide an alternativeHint.
-- Default to 3 suggestions per query (responseType "suggestions").
-- Do not surface destinations the user recently visited (recent_destinations list below).
+- Tone: calm, concise, helpful. Never salesy.
+- Never use em dashes.
+- Return ONLY valid JSON. No markdown, no text outside the JSON.
+- Only suggest destinations from the INVENTORY below. Never invent destinations.
+- assistantMessage must never be empty. 1-2 sentences summarizing what you found or why there's an issue.
+
+CONSTRAINT MEMORY (critical):
+- Maintain ALL constraints the user has stated across the entire conversation.
+- If the user said "nonstop only" in a previous turn, that constraint stays active unless they explicitly remove it.
+- When the user says something vague like "show cheaper options" or "show more options", keep all prior constraints and interpret the request within those constraints.
+- If keeping prior constraints makes it impossible to find results, respond with responseType "conflict" and ask the user WHICH constraint to relax -- never silently drop one.
+- Example: user says "nonstop only" → no results → user says "show cheapest" → you should either show cheapest nonstop OR ask "Should I keep the nonstop requirement or relax it to find cheaper options?"
+
+RESPONSE TYPES:
+- "suggestions": default, return 3 results matching all active constraints
+- "clarifying_question": query is too vague (e.g. "I want to travel"), ask ONE focused follow-up
+- "conflict": active constraints together make it impossible to find results -- explain which constraints conflict and ask which to relax
+- "no_results": constraints are clear but genuinely nothing in inventory matches -- rare, prefer "conflict" when the issue is a constraint tension
+
+FILTER SUGGESTIONS (for no_results and conflict only):
+- Populate filterSuggestions with 3-4 short, tap-friendly phrases the user can send to refine their search.
+- These should be actionable alternatives, e.g.: "Remove nonstop requirement", "Increase budget to $600", "Try 1 stop flights", "Show any beach destination"
+- Keep each phrase under 8 words. No punctuation at the end.
+- For suggestions responseType, filterSuggestions must be [].
+
+BEST VALUE:
+- Exactly one suggestion must have isBestValue: true -- the best overall value, not just cheapest.
 
 USER PROFILE:
-- Name: ${user.display_name}
-- Home airport: ${user.home_airport}
-- MileagePlus tier: ${user.mileage_plus_tier}
-- MileagePlus balance: ${user.mileage_balance} miles
-- Travel style: ${prefs?.travelStyle ?? 'leisure'}
-- Budget ceiling: $${prefs?.budgetCeilingUsd ?? 800} USD round trip
+- Name: ${user.display_name}, Airport: ${user.home_airport}, Tier: ${user.mileage_plus_tier}
+- Miles: ${user.mileage_balance}, Style: ${prefs?.travelStyle ?? 'leisure'}, Budget: $${prefs?.budgetCeilingUsd ?? 800} USD RT
 - Seat preference: ${prefs?.seatPreference ?? 'aisle'}
-- Recently visited (deprioritize): ${(user.recent_destinations as string[])?.join(', ') || 'none'}
+- Recently visited (skip): ${(user.recent_destinations as string[])?.join(', ') || 'none'}
 
-AVAILABLE INVENTORY (destinations + flights from ${user.home_airport}):
+INVENTORY (destinations + flights from ${user.home_airport}):
 ${JSON.stringify({ destinations, flights })}
 
-RESPONSE CONTRACT -- return exactly this JSON shape, nothing else:
+RESPONSE CONTRACT (return nothing else):
 {
-  "responseType": "suggestions" | "clarifying_question" | "no_results" | "conflict",
-  "assistantMessage": "string shown as the chat bubble -- never empty",
-  "rankingCriteria": "best_match" | "lowest_price" | "shortest_duration" | null,
+  "responseType": "suggestions|clarifying_question|no_results|conflict",
+  "assistantMessage": "string -- never empty",
+  "rankingCriteria": "best_match|lowest_price|shortest_duration|null",
   "suggestions": [
     {
-      "destinationId": "IATA code matching a destination id above",
+      "destinationId": "IATA",
       "city": "string",
       "country": "string",
       "whyThisMatches": "one sentence tied to user preferences",
@@ -90,14 +96,13 @@ RESPONSE CONTRACT -- return exactly this JSON shape, nothing else:
     }
   ],
   "conflictHint": "string or null",
-  "alternativeHint": "string or null"
+  "alternativeHint": "string or null",
+  "filterSuggestions": ["phrase 1", "phrase 2", "phrase 3"]
 }
 
-For responseType "suggestions": include exactly 3 suggestions, exactly one with isBestValue true.
-For other responseTypes: suggestions array must be empty [].`
+For responseType "suggestions": exactly 3 items, exactly one isBestValue true, filterSuggestions=[].
+For other responseTypes: suggestions=[], filterSuggestions has 3-4 actionable phrases.`
 }
-
-// ─── OpenAI API Call ──────────────────────────────────────────────────────────
 
 async function callOpenAI(
   systemPrompt: string,
@@ -140,21 +145,10 @@ async function callOpenAI(
   return text
 }
 
-// ─── Response Validation ──────────────────────────────────────────────────────
-
-function parseAndValidateResponse(
-  rawText: string,
-  destinations: Array<{ id: string }>
-): TripPlannerResponse {
-  // Strip markdown fences just in case
-  const cleaned = rawText
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/```\s*$/i, '')
-    .trim()
+function parseAndValidateResponse(rawText: string, destinations: Array<{ id: string }>): TripPlannerResponse {
+  const cleaned = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
 
   let parsed: TripPlannerResponse
-
   try {
     parsed = JSON.parse(cleaned)
   } catch {
@@ -166,16 +160,20 @@ function parseAndValidateResponse(
       suggestions: [],
       conflictHint: null,
       alternativeHint: null,
+      filterSuggestions: [],
     }
   }
 
   // Ensure assistantMessage is never empty
   if (!parsed.assistantMessage?.trim()) {
-    if (parsed.responseType === 'suggestions') {
-      parsed.assistantMessage = "Here are some destinations that match your trip."
-    } else {
-      parsed.assistantMessage = "Let me help you find the right trip."
-    }
+    parsed.assistantMessage = parsed.responseType === 'suggestions'
+      ? 'Here are some destinations that match your trip.'
+      : 'Let me help you adjust your search.'
+  }
+
+  // Ensure filterSuggestions is always an array
+  if (!Array.isArray(parsed.filterSuggestions)) {
+    parsed.filterSuggestions = []
   }
 
   // FR-022 grounding: strip suggestions with unknown destinationIds
@@ -189,8 +187,7 @@ function parseAndValidateResponse(
     const bestCount = parsed.suggestions.filter((s) => s.isBestValue).length
     if (bestCount === 0) {
       const cheapestIdx = parsed.suggestions.reduce(
-        (minIdx, s, idx, arr) => (s.lowestFareUsd < arr[minIdx].lowestFareUsd ? idx : minIdx),
-        0
+        (minIdx, s, idx, arr) => (s.lowestFareUsd < arr[minIdx].lowestFareUsd ? idx : minIdx), 0
       )
       parsed.suggestions[cheapestIdx].isBestValue = true
     } else if (bestCount > 1) {
@@ -200,6 +197,8 @@ function parseAndValidateResponse(
         return { ...s, isBestValue: false }
       })
     }
+    // Clear filterSuggestions for suggestions responses
+    parsed.filterSuggestions = []
   }
 
   // If grounding stripped all suggestions
@@ -211,18 +210,15 @@ function parseAndValidateResponse(
       suggestions: [],
       conflictHint: null,
       alternativeHint: 'Try adjusting your budget or travel dates.',
+      filterSuggestions: ['Increase budget to $600', 'Allow 1 stop', 'Try different dates', 'Show all beach destinations'],
     }
   }
 
   return parsed
 }
 
-// ─── Main Handler ─────────────────────────────────────────────────────────────
-
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
   try {
     const { conversationId, userId, messageText } = await req.json()
@@ -234,19 +230,9 @@ serve(async (req) => {
       )
     }
 
-    // Service-role client -- bypasses RLS
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    )
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
-    // Fetch user profile
-    const { data: user, error: userErr } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single()
-
+    const { data: user, error: userErr } = await supabase.from('users').select('*').eq('id', userId).single()
     if (userErr || !user) {
       return new Response(
         JSON.stringify({ error: 'User not found' }),
@@ -254,42 +240,22 @@ serve(async (req) => {
       )
     }
 
-    // Fetch conversation history (last 20 messages = ~10 turns)
     const { data: history } = await supabase
-      .from('messages')
-      .select('role, content')
+      .from('messages').select('role, content')
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: true })
       .limit(20)
 
-    // Fetch full inventory
     const { data: destinations } = await supabase.from('destinations').select('*')
-    const { data: flights } = await supabase
-      .from('flights')
-      .select('*')
-      .eq('origin_airport', user.home_airport)
+    const { data: flights } = await supabase.from('flights').select('*').eq('origin_airport', user.home_airport)
 
-    // Persist user message
-    await supabase.from('messages').insert({
-      conversation_id: conversationId,
-      role: 'user',
-      content: messageText.trim(),
-    })
+    await supabase.from('messages').insert({ conversation_id: conversationId, role: 'user', content: messageText.trim() })
+    await supabase.from('conversations').update({ last_active_at: new Date().toISOString() }).eq('id', conversationId)
 
-    // Update conversation last_active_at
-    await supabase
-      .from('conversations')
-      .update({ last_active_at: new Date().toISOString() })
-      .eq('id', conversationId)
-
-    // Build system prompt and call OpenAI
     const systemPrompt = buildSystemPrompt(user, destinations ?? [], flights ?? [])
     const rawText = await callOpenAI(systemPrompt, history ?? [], messageText.trim())
-
-    // Validate and ground the response
     const structured = parseAndValidateResponse(rawText, destinations ?? [])
 
-    // Persist assistant turn
     await supabase.from('messages').insert({
       conversation_id: conversationId,
       role: 'assistant',
@@ -310,6 +276,7 @@ serve(async (req) => {
         suggestions: [],
         conflictHint: null,
         alternativeHint: null,
+        filterSuggestions: [],
       }),
       { status: 200, headers: { ...corsHeaders, 'content-type': 'application/json' } }
     )

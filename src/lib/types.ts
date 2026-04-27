@@ -25,8 +25,9 @@ export interface TripPlannerResponse {
   assistantMessage: string
   rankingCriteria: RankingCriteria
   suggestions: Suggestion[]
-  conflictHint: string | null   // FR-013
+  conflictHint: string | null    // FR-013
   alternativeHint: string | null // FR-014
+  filterSuggestions: string[]    // Tap-to-send chips shown on no_results / conflict
 }
 
 // ─── Message Store Types ──────────────────────────────────────────────────────
