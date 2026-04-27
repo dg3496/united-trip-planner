@@ -3,10 +3,10 @@
 ## Current Focus
 
 **Frontend (Abhinav) and Backend (Dhruv) running in parallel.**
-Backend is largely deployed — Edge Function is ACTIVE. Frontend Track A is complete; Track B (chat UI) and Track C (cards, booking, alerts) are merged to `main`.
+Backend is deployed and active. Frontend Tracks A, B, and C are merged to `main`.
 
 GitHub repo: https://github.com/dg3496/united-trip-planner
-Active branch: `frontend`
+Active branch: `main`
 Supabase project ref: jexqrbxpgxnmwxgkyinn
 
 ---
@@ -43,11 +43,11 @@ Delivered:
 
 ---
 
-### Track B — Chat UI Core ✅ MERGED TO `main`
+### Track B — Chat UI Core ✅ COMPLETE
 **Files:** `src/pages/Chat.tsx`, `src/components/chat/MessageList.tsx`, `src/components/chat/ChatInput.tsx`, `src/components/chat/ExamplePrompts.tsx`, `src/components/chat/LoadingIndicator.tsx`
 **Phases:** 5 (main chat flow)
 
-Deliverables:
+Delivered:
 - `Chat.tsx` — confirm TopBar + MessageList + ChatInput + BottomNav layout is correct and full-height on mobile
 - `MessageList.tsx` — welcome state with ExamplePrompts when empty (FR-005), auto-scroll to bottom on new messages, LoadingIndicator at bottom while isLoading
 - `ChatInput.tsx` — textarea send on Enter (Shift+Enter for newline), disabled while loading or empty, auto-focus on mount, iOS visual viewport resize handling for keyboard push
@@ -74,6 +74,7 @@ Deliverables:
 ## Recent Changes
 
 - **2026-04-27:** Track C merged to `main` from `frontend-track-c` (booking route `/booking/:flightId`, expanded detail from seeded flights, price alerts with optional `flight_id`).
+- **2026-04-27:** Frontend Track B merged into `main` (`frontend-track-b` -> `main`). Chat core mobile UX improvements shipped: prompt chips, loading indicator rotation, iOS keyboard offset handling, and message list layout fixes.
 - **2026-04-27:** Track A complete and merged to `main`. Home screen, `design.md`, `index.css` reset all shipped.
 - **2026-04-27:** Backend (Dhruv): schema migration and seed applied (25 destinations, 70 flights). Edge Function deployed and ACTIVE. `.env.example` updated with real Supabase values.
 - **2026-04-27:** `frontend` branch created. 3-track parallel build structure established.

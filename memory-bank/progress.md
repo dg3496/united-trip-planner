@@ -2,18 +2,18 @@
 
 ## Current Status
 
-**Phase 1 and Phase 2 scaffolding complete. Backend setup in progress.**
+**Phases 1 to 8 merged to `main` across Tracks A, B, and C. Phase 9 polish and demo prep remain in progress.**
 
 GitHub repo live at: https://github.com/dg3496/united-trip-planner
 Team ownership: Dhruv on backend (Supabase), frontend team on React components.
 
-## Track B Stock Check (2026-04-27)
+## Frontend Track B Stock Check (2026-04-27)
 
-Track B is the backend workstream (Supabase + Edge Function + Claude orchestration).
+Track B is the chat UI core workstream (`src/pages/Chat.tsx` and chat components).
 
-- **Completed artifacts:** backend schema SQL, seed SQL, `chat-trip-planner` Edge Function implementation, Supabase project linkage via MCP.
-- **Remaining execution steps:** run migration, run seed, set `ANTHROPIC_API_KEY`, deploy Edge Function, pass `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to frontend, execute one end-to-end smoke test.
-- **Risk to watch:** seed currently includes 9 destinations, below target 20 to 30, which can weaken demo variety unless expanded before final rehearsal.
+- **Completed artifacts:** chat container mobile layout, message list scroll behavior, prompt chip UI, loading indicator rotation, and iOS keyboard offset handling in chat input.
+- **Merge status:** `frontend-track-b` has been merged into `main`.
+- **Remaining dependencies:** Phase 9 polish and final end-to-end demo validation.
 
 ## What Works
 
@@ -45,6 +45,7 @@ This section will be updated as features come online. Format going forward:
 
 - **2026-04-27:** Track C (Phases 6 to 8 handoff) merged to `main` from `frontend-track-c`: expanded detail from seeded `flights`, booking at `/booking/:flightId`, price alerts with resolved or null `flight_id`.
 - **2026-04-27:** Home screen (Phase 4) complete on `frontend-track-a`. Visually verified in browser at localhost:5173. Nav, CTA, featured destinations, and resume card all render correctly. Both `frontend` and `frontend-track-a` branches pushed to GitHub.
+- **2026-04-27:** Chat core (Track B, Phase 5) merged to `main` from `frontend-track-b`.
 
 ## Build Checklist
 
