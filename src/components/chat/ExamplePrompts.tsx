@@ -8,7 +8,7 @@ const PROMPTS = [
   'Beach trip under $500 in March',
   'Somewhere warm, 5 to 7 days, nonstop only',
   'Europe for under $800 in spring',
-  'Surprise me — I just need a getaway',
+  'Surprise me, I just need a getaway',
 ]
 
 export function ExamplePrompts({ onSelect }: Props) {
