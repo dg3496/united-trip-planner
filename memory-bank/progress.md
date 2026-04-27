@@ -7,6 +7,14 @@
 GitHub repo live at: https://github.com/dg3496/united-trip-planner
 Team ownership: Dhruv on backend (Supabase), frontend team on React components.
 
+## Track B Stock Check (2026-04-27)
+
+Track B is the backend workstream (Supabase + Edge Function + Claude orchestration).
+
+- **Completed artifacts:** backend schema SQL, seed SQL, `chat-trip-planner` Edge Function implementation, Supabase project linkage via MCP.
+- **Remaining execution steps:** run migration, run seed, set `ANTHROPIC_API_KEY`, deploy Edge Function, pass `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to frontend, execute one end-to-end smoke test.
+- **Risk to watch:** seed currently includes 9 destinations, below target 20 to 30, which can weaken demo variety unless expanded before final rehearsal.
+
 ## What Works
 
 - **2026-04-27:** Project ideation, GTM strategy, PRD, and architectural documentation fully complete.

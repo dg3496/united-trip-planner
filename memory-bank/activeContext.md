@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-**Backend setup via Supabase MCP.** Frontend scaffolding is complete and pushed to GitHub. The immediate goal is to get the Supabase project fully configured (schema, seed data, Edge Function deployed, secrets set) so the frontend team can connect and see real Claude responses.
+**Track B (Backend) via Supabase MCP.** Frontend scaffolding is complete and pushed to GitHub. The immediate goal is to get the Supabase project fully configured (schema, seed data, Edge Function deployed, secrets set) so the frontend team can connect and see real Claude responses.
 
 GitHub repo: https://github.com/dg3496/united-trip-planner
 Supabase project ref: jexqrbxpgxnmwxgkyinn
@@ -14,6 +14,16 @@ Next actions (in order):
 4. Deploy chat-trip-planner Edge Function
 5. Get project URL + anon key for .env.local
 6. Smoke test the full flow
+
+## Track B Stock Check (2026-04-27)
+
+Scope for Track B is backend readiness: Supabase schema + seed + Edge Function + secrets + deployment + smoke test.
+
+- **Done:** Supabase MCP connected; schema and seed scripts authored; Edge Function orchestration code authored.
+- **In progress:** Applying migration and seed in the linked Supabase project.
+- **Not started / pending:** Setting `ANTHROPIC_API_KEY`, deploying function, collecting env values for frontend handoff, smoke-testing end-to-end.
+- **Definition of complete for Track B:** Frontend can invoke the deployed `chat-trip-planner` function and receive grounded structured responses from Claude using seeded inventory.
+- **Coordination status:** Paused intentionally until frontend teammate pushes latest changes, then resume backend deployment and end-to-end validation.
 
 ## Recent Changes
 
