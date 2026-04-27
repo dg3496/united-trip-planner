@@ -10,7 +10,7 @@
 | Routing | React Router 6 | `/`, `/chat`, `/booking/:flightId` |
 | HTTP / DB client | `@supabase/supabase-js` | Used for both DB queries and invoking Edge Functions |
 | Backend platform | Supabase | Postgres + Edge Functions (Deno) + Auth |
-| LLM | Google Gemini Flash (gemini-2.0-flash) | Free tier. Called from Edge Function only, never from frontend |
+| LLM | OpenAI gpt-4o-mini | Low cost. Called from Edge Function only, never from frontend |
 | Hosting | Vercel (recommended) or Netlify | Static frontend; Supabase hosts Edge Functions |
 | Icons | `lucide-react` | Lightweight, matches a clean airline aesthetic |
 | Toast notifications | `sonner` | Used for "Price alert set" confirmation (FR-038) |
@@ -22,14 +22,16 @@
 - Free tier is sufficient for a class demo.
 - Postgres (not DynamoDB) matches Architecture doc §2's stated preference for richer query support.
 
-## Why Gemini Flash
+## Why OpenAI gpt-4o-mini
 
-- **Free tier** via Google AI Studio (aistudio.google.com/apikey) -- no cost for prototype/demo volume.
-- Strong structured JSON output via `responseMimeType: 'application/json'` in generationConfig.
+- Low cost per token, well within demo budget.
+- Reliable structured JSON output via `response_format: { type: 'json_object' }`.
 - Latency is fast enough for the 5-second NFR budget.
 - Straightforward REST API callable from a Deno Edge Function.
-- Model: `gemini-2.0-flash`. Secret name: `GEMINI_API_KEY`.
-- Key difference from Claude: role names are `"user"` and `"model"` (not `"assistant"`). The Edge Function handles this mapping automatically.
+- Model: `gpt-4o-mini`. Secret name: `OPENAI_API_KEY` (set in Supabase Vault).
+- Role names are `"user"`, `"assistant"`, and `"system"` -- matching the DB schema directly, no mapping needed.
+
+Note: Gemini Flash was the original choice (free tier) but had quota=0 on the project's account. OpenAI was substituted with identical JSON contract -- no frontend changes required.
 
 ## Third-Party APIs and Integrations (Production vs Prototype)
 
@@ -59,12 +61,12 @@ VITE_SUPABASE_ANON_KEY=<public anon key>
 VITE_DEMO_USER_ID=<uuid of the seeded demo user>
 ```
 
-Supabase Edge Function secrets (set via `supabase secrets set`):
+Supabase Edge Function secrets (set via Supabase dashboard > Settings > Edge Functions > Secrets):
 ```
-ANTHROPIC_API_KEY=<server-side only, never exposed to frontend>
+OPENAI_API_KEY=<server-side only, never exposed to frontend>
 ```
 
-Never put `ANTHROPIC_API_KEY` in the frontend env. The Edge Function is the only thing that should ever see it.
+Never put `OPENAI_API_KEY` in the frontend env. The Edge Function is the only thing that should ever see it.
 
 ## Supabase Database Schema
 
@@ -192,8 +194,8 @@ serve(async (req) => {
   // 8. Build system prompt with persona + user profile + inventory
   const systemPrompt = buildSystemPrompt(user, destinations, flights);
 
-  // 9. Call Claude
-  const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+  // 9. Call OpenAI
+  const claudeResponse = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!,

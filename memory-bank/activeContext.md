@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-**Backend setup via Supabase MCP.** Frontend scaffolding is complete and pushed to GitHub. The immediate goal is to get the Supabase project fully configured (schema, seed data, Edge Function deployed, secrets set) so the frontend team can connect and see real Claude responses.
+**Backend complete and end-to-end verified.** Frontend team can now connect and start building UI. The immediate goal is to get the frontend pages and components implemented so the app is demo-ready.
 
 GitHub repo: https://github.com/dg3496/united-trip-planner
 Supabase project ref: jexqrbxpgxnmwxgkyinn
@@ -10,11 +10,17 @@ Supabase project ref: jexqrbxpgxnmwxgkyinn
 Next actions (in order):
 1. ~~Apply schema migration via MCP~~ DONE
 2. ~~Seed demo user + destinations + flights~~ DONE (25 destinations, 70 flights)
-3. Set GEMINI_API_KEY secret -- PENDING (user to add via Supabase dashboard > Settings > Edge Functions > Secrets)
-4. ~~Deploy chat-trip-planner Edge Function~~ DONE (ACTIVE)
-5. ~~Get project URL + anon key for .env.local~~ DONE (in .env.example)
-6. Open PR: backend -> main
+3. ~~Set OPENAI_API_KEY secret~~ DONE
+4. ~~Deploy chat-trip-planner Edge Function~~ DONE (v12, ACTIVE, OpenAI gpt-4o-mini)
+5. ~~End-to-end smoke test~~ DONE (3 cards returned, Best Value labeled, assistantMessage populated)
+6. ~~Push backend branch with OpenAI changes~~ DONE
 7. Frontend team: copy .env.example to .env.local and run npm run dev
+8. Implement Home screen (Phase 4)
+9. Implement Chat UI (Phase 5)
+10. Wire chat to Edge Function and confirm full round trip
+11. Build expanded card view + booking confirmation (Phases 6-7)
+12. Add price alerts (Phase 8)
+13. Polish and deploy to Vercel (Phase 9)
 
 ## Recent Changes
 
@@ -22,6 +28,8 @@ Next actions (in order):
 - **2026-04-27:** Supabase MCP server connected and authenticated (project ref: jexqrbxpgxnmwxgkyinn).
 - **2026-04-27:** Memory Bank added to GitHub repo at memory-bank/ and will be updated after every significant change.
 - **2026-04-27:** Team split established: Dhruv owns supabase/, frontend team owns src/pages/ and src/components/.
+- **2026-04-27:** Switched LLM from Gemini Flash to OpenAI gpt-4o-mini (Gemini had quota=0 on free tier). OPENAI_API_KEY set in Supabase Vault. Edge Function redeployed as v12.
+- **2026-04-27:** End-to-end smoke test passed. "Beach trip under $500 in March" returned 3 valid cards (SJU $279 Best Value, MBJ $419, PHX $299). assistantMessage non-empty, grounding validated, Best Value normalized.
 
 ## Previously Recorded Changes
 
