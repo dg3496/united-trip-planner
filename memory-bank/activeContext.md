@@ -55,7 +55,7 @@ Note: `DestinationCard` rendering inside `MessageBubble` is Track C's responsibi
 
 Deliverables:
 - `DestinationCard.tsx` — full card: city, country, fare (USD), dates, flight duration, stops, "Why this matches" line (FR-023), Best Value badge (FR-025), trade-off line if present (FR-024), "Notify Me if Price Drops" button (FR-038)
-- `ExpandedFlightDetail.tsx` — tap card to expand modal/sheet: departure/return times, stops, aircraft type, fare class, "Book This Trip" CTA that navigates to `/booking` with URL params (FR-019)
+- `ExpandedFlightDetail.tsx` — expand in-card panel: departure/return times, stops, aircraft type, fare class, "Book This Trip" CTA to `/booking/:flightId` plus query params (FR-019)
 - `Booking.tsx` — already has skeleton; fill in: fare class selector, passenger count (fixed at 1 for demo), Confirm Booking fake success state with toast, "Back to your trip planner" link (FR-034 to FR-037)
 - Price alerts: "Notify Me if Price Drops" calls `supabase.from('price_alerts').insert(...)` with `expires_at = now + 90 days`, then shows a `toast.success("We'll let you know if the price drops")` (FR-038 to FR-040)
 
