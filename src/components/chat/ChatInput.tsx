@@ -1,0 +1,76 @@
+// TODO (Frontend team): Fixed-bottom text input for the chat.
+// - Send button disabled when input is empty or whitespace (prevent empty sends)
+// - Send button disabled while isLoading
+// - Enter key sends (Shift+Enter for newline)
+// - Input should auto-focus on mount
+// Keyboard/mobile note: on iOS, a fixed bottom bar shifts up with the software keyboard.
+// Test on iPhone viewport and handle via visualViewport resize if needed.
+
+import { useState, useRef, useEffect } from 'react'
+import { Send } from 'lucide-react'
+
+interface Props {
+  onSend: (text: string) => void
+  isLoading: boolean
+}
+
+export function ChatInput({ onSend, isLoading }: Props) {
+  const [value, setValue] = useState('')
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    textareaRef.current?.focus()
+  }, [])
+
+  function handleSend() {
+    const trimmed = value.trim()
+    if (!trimmed || isLoading) return
+    onSend(trimmed)
+    setValue('')
+    // Reset textarea height
+    if (textareaRef.current) textareaRef.current.style.height = 'auto'
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
+  function handleInput() {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`
+  }
+
+  const canSend = value.trim().length > 0 && !isLoading
+
+  return (
+    <div className="border-t border-gray-100 bg-white px-4 py-3 flex items-end gap-3 flex-shrink-0 pb-safe">
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onInput={handleInput}
+        placeholder="Where do you want to go?"
+        rows={1}
+        className="flex-1 resize-none bg-gray-100 rounded-2xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003087]/30 max-h-[120px] leading-relaxed"
+      />
+      <button
+        onClick={handleSend}
+        disabled={!canSend}
+        className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+          canSend
+            ? 'bg-[#003087] text-white active:bg-[#002070]'
+            : 'bg-gray-200 text-gray-400'
+        }`}
+        aria-label="Send message"
+      >
+        <Send size={18} />
+      </button>
+    </div>
+  )
+}
