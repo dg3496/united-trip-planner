@@ -10,7 +10,7 @@
 | Routing | React Router 6 | `/`, `/chat`, `/booking/:flightId` |
 | HTTP / DB client | `@supabase/supabase-js` | Used for both DB queries and invoking Edge Functions |
 | Backend platform | Supabase | Postgres + Edge Functions (Deno) + Auth |
-| LLM | Anthropic Claude (Sonnet) | Called from Edge Function only, never from frontend |
+| LLM | Google Gemini Flash (gemini-2.0-flash) | Free tier. Called from Edge Function only, never from frontend |
 | Hosting | Vercel (recommended) or Netlify | Static frontend; Supabase hosts Edge Functions |
 | Icons | `lucide-react` | Lightweight, matches a clean airline aesthetic |
 | Toast notifications | `sonner` | Used for "Price alert set" confirmation (FR-038) |
@@ -22,13 +22,14 @@
 - Free tier is sufficient for a class demo.
 - Postgres (not DynamoDB) matches Architecture doc §2's stated preference for richer query support.
 
-## Why Claude (Specifically Sonnet)
+## Why Gemini Flash
 
-- Strong instruction following for structured JSON output, which is critical to the destination card render contract.
-- Latency is low enough to fit in the 5-second NFR budget (NFR-01) with room for orchestration overhead.
-- Anthropic's API is straightforward to call from a Deno Edge Function.
-
-Use the latest Sonnet model identifier available at build time. As of this writing the API model string is `claude-sonnet-4-5` or the equivalent latest Sonnet; check Anthropic's docs (https://docs.claude.com) before locking the model string in code.
+- **Free tier** via Google AI Studio (aistudio.google.com/apikey) -- no cost for prototype/demo volume.
+- Strong structured JSON output via `responseMimeType: 'application/json'` in generationConfig.
+- Latency is fast enough for the 5-second NFR budget.
+- Straightforward REST API callable from a Deno Edge Function.
+- Model: `gemini-2.0-flash`. Secret name: `GEMINI_API_KEY`.
+- Key difference from Claude: role names are `"user"` and `"model"` (not `"assistant"`). The Edge Function handles this mapping automatically.
 
 ## Third-Party APIs and Integrations (Production vs Prototype)
 
@@ -37,7 +38,7 @@ Use the latest Sonnet model identifier available at build time. As of this writi
 | United Flight Inventory and Pricing API (internal) | Real-time flight availability, fares, seat maps | Direct Postgres query against the seeded `flights` table |
 | MileagePlus Member Service (internal) | User tier, balance, home airport, travel history | Direct Postgres query against the seeded `users` table |
 | Destination Metadata Service | Climate, activities, imagery | Flat-baked into the seeded `destinations` table |
-| LLM Provider | OpenAI GPT-4o, Anthropic Claude, or fine-tuned internal | Anthropic Claude (Sonnet) only |
+| LLM Provider | OpenAI GPT-4o, Anthropic Claude, or fine-tuned internal | Google Gemini Flash (gemini-2.0-flash) -- free tier |
 | Push Notification Service (FCM/APNs) | Fires price drop alerts | Alerts persist to DB but no notifications fire |
 
 ## Performance Constraints (from production spec)

@@ -10,7 +10,7 @@ Supabase project ref: jexqrbxpgxnmwxgkyinn
 Next actions (in order):
 1. ~~Apply schema migration via MCP~~ DONE
 2. ~~Seed demo user + destinations + flights~~ DONE (25 destinations, 70 flights)
-3. Set ANTHROPIC_API_KEY secret -- PENDING (user to add via Supabase dashboard)
+3. Set GEMINI_API_KEY secret -- PENDING (user to add via Supabase dashboard > Settings > Edge Functions > Secrets)
 4. ~~Deploy chat-trip-planner Edge Function~~ DONE (ACTIVE)
 5. ~~Get project URL + anon key for .env.local~~ DONE (in .env.example)
 6. Open PR: backend -> main

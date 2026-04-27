@@ -29,6 +29,7 @@ Team ownership: Dhruv on backend (Supabase), frontend team on React components.
 - **2026-04-27:** chat-trip-planner Edge Function deployed (ACTIVE, JWT verify off for prototype).
 - **2026-04-27:** Project URL and anon key confirmed. .env.example updated with real values.
 - **2026-04-27:** Smoke test passed: all 25 destinations have flights, fares verified ($249 PHX to $1049 NRT).
+- **2026-04-27:** Switched LLM from Anthropic Claude to Google Gemini Flash (gemini-2.0-flash) -- free tier, same JSON contract. Edge Function redeployed as version 2. Requires GEMINI_API_KEY secret (get free at aistudio.google.com/apikey).
 
 This section will be updated as features come online. Format going forward:
 
