@@ -61,6 +61,7 @@ Deliverables:
 
 ## Recent Changes
 
+- **2026-04-27:** Track C implemented on local branch `frontend-track-c` (branched from `frontend-track-a`): `getCheapestFlightForDestination` + `getDestinationById` in `api.ts`, price alerts use a real `flight_id` when available, `ExpandedFlightDetail` loads DB flight row (aircraft, fare class, leg durations, demo clock times from dates), booking route is `/booking/:flightId` with full handoff UI (fare class selector, fake confirm + toast, back link). Open PR when ready to merge into `frontend` or `main`.
 - **2026-04-27:** Track A complete: `src/pages/Home.tsx` fully built (FR-001, FR-002, FR-003). `src/index.css` reset to mobile-first base styles. Visually verified in browser — navy header, Premier Gold badge, AI CTA card, featured destinations, bottom nav all render correctly.
 - **2026-04-27:** `frontend` branch created. Frontend build divided into 3 parallel tracks (A: Home+Polish, B: Chat UI core, C: Cards+Booking+Alerts). See track definitions above.
 - **2026-04-27:** Full project scaffolded and pushed to GitHub (see progress.md for full list).

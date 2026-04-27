@@ -1,5 +1,5 @@
 import { supabase, DEMO_USER_ID } from './supabase'
-import type { TripPlannerResponse, DbFlight } from './types'
+import type { TripPlannerResponse, DbFlight, DbDestination } from './types'
 
 export interface ChatRequestPayload {
   conversationId: string
@@ -44,6 +44,22 @@ export async function createConversation(): Promise<string> {
   return data.id
 }
 
+// Fetch the cheapest flight for a destination (booking, alerts, expanded detail)
+export async function getCheapestFlightForDestination(
+  destinationId: string
+): Promise<DbFlight | null> {
+  const { data, error } = await supabase
+    .from('flights')
+    .select('*')
+    .eq('destination_id', destinationId)
+    .order('fare_usd', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) return null
+  return data as DbFlight | null
+}
+
 // Fetch the cheapest flight for a destination (used by booking screen)
 export async function getFlightById(flightId: string): Promise<DbFlight | null> {
   const { data, error } = await supabase
@@ -56,10 +72,17 @@ export async function getFlightById(flightId: string): Promise<DbFlight | null> 
   return data as DbFlight
 }
 
+export async function getDestinationById(id: string): Promise<DbDestination | null> {
+  const { data, error } = await supabase.from('destinations').select('*').eq('id', id).maybeSingle()
+
+  if (error) return null
+  return data as DbDestination | null
+}
+
 // Set a price alert for a destination / flight
 export async function setPriceAlert(
   destinationId: string,
-  flightId: string,
+  flightId: string | null,
   thresholdFareUsd: number
 ): Promise<void> {
   const expiresAt = new Date()
