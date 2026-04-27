@@ -43,6 +43,7 @@ This section will be updated as features come online. Format going forward:
 
 > **YYYY-MM-DD:** Feature X works end-to-end. Notes on caveats.
 
+- **2026-04-27:** Track C (Phases 6 to 8 handoff) merged to `main` from `frontend-track-c`: expanded detail from seeded `flights`, booking at `/booking/:flightId`, price alerts with resolved or null `flight_id`.
 - **2026-04-27:** Home screen (Phase 4) complete on `frontend-track-a`. Visually verified in browser at localhost:5173. Nav, CTA, featured destinations, and resume card all render correctly. Both `frontend` and `frontend-track-a` branches pushed to GitHub.
 
 ## Build Checklist

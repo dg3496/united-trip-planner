@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Clock, Plane, Star, Bell, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Suggestion } from '../../lib/types'
-import { setPriceAlert } from '../../lib/api'
+import { getCheapestFlightForDestination, setPriceAlert } from '../../lib/api'
 import { ExpandedFlightDetail } from './ExpandedFlightDetail'
 
 interface Props {
@@ -20,11 +20,8 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
 
   async function handlePriceAlert() {
     try {
-      // flight_id not in the suggestion — we pass destination_id for the alert.
-      // The Edge Function stores the cheapest flight id; here we persist the alert
-      // against the destination for the demo. In production this would resolve
-      // to a specific flight_id.
-      await setPriceAlert(suggestion.destinationId, '', suggestion.lowestFareUsd)
+      const flight = await getCheapestFlightForDestination(suggestion.destinationId)
+      await setPriceAlert(suggestion.destinationId, flight?.id ?? null, suggestion.lowestFareUsd)
       setAlertSet(true)
       toast.success("We'll let you know if the price drops")
     } catch {

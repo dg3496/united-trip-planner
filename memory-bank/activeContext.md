@@ -3,7 +3,7 @@
 ## Current Focus
 
 **Frontend (Abhinav) and Backend (Dhruv) running in parallel.**
-Backend is largely deployed — Edge Function is ACTIVE. Frontend Track A is complete; Tracks B and C in progress.
+Backend is largely deployed — Edge Function is ACTIVE. Frontend Track A is complete; Track B (chat UI) and Track C (cards, booking, alerts) are merged to `main`.
 
 GitHub repo: https://github.com/dg3496/united-trip-planner
 Active branch: `frontend`
@@ -43,7 +43,7 @@ Delivered:
 
 ---
 
-### Track B — Chat UI Core
+### Track B — Chat UI Core ✅ MERGED TO `main`
 **Files:** `src/pages/Chat.tsx`, `src/components/chat/MessageList.tsx`, `src/components/chat/ChatInput.tsx`, `src/components/chat/ExamplePrompts.tsx`, `src/components/chat/LoadingIndicator.tsx`
 **Phases:** 5 (main chat flow)
 
@@ -59,20 +59,21 @@ Note: `DestinationCard` rendering inside `MessageBubble` is Track C's responsibi
 
 ---
 
-### Track C — Destination Cards + Booking + Price Alerts
+### Track C — Destination Cards + Booking + Price Alerts ✅ MERGED TO `main`
 **Files:** `src/components/chat/DestinationCard.tsx`, `src/components/chat/ExpandedFlightDetail.tsx`, `src/pages/Booking.tsx`
 **Phases:** 6 + 7 + 8
 
 Deliverables:
-- `DestinationCard.tsx` — full card: city, country, fare (USD), dates, duration, stops, "Why this matches" (FR-023), Best Value badge (FR-025), trade-off line (FR-024), "Notify Me if Price Drops" button (FR-038)
-- `ExpandedFlightDetail.tsx` — tap to expand: departure/return times, stops, aircraft type, fare class, "Book This Trip" CTA navigating to `/booking` with URL params (FR-019)
-- `Booking.tsx` — fare class selector, passenger count (fixed at 1), Confirm Booking fake success toast, "Back to your trip planner" link (FR-034 to FR-037)
-- Price alerts: insert to `price_alerts` with `expires_at = now + 90 days`, show `toast.success(...)` (FR-038 to FR-040)
+- `DestinationCard.tsx` — full card: city, country, fare (USD), dates, flight duration, stops, "Why this matches" (FR-023), Best Value badge (FR-025), trade-off line (FR-024), "Notify Me if Price Drops" (FR-038); resolves cheapest flight for `price_alerts.flight_id` when present
+- `ExpandedFlightDetail.tsx` — expand in-card panel: departure/return times (demo clocks from dates), stops, aircraft type, fare class from DB row, "Book This Trip" to `/booking/:flightId` with query params (FR-019)
+- `Booking.tsx` — fare class selector, passenger count fixed at 1, Confirm Booking fake success + toast, "Back to your trip planner" link (FR-034 to FR-037)
+- Price alerts: `setPriceAlert` inserts `price_alerts` with `expires_at` +90 days and `toast.success` (FR-038 to FR-040); helpers in `src/lib/api.ts`: `getCheapestFlightForDestination`, `getDestinationById`
 
 ---
 
 ## Recent Changes
 
+- **2026-04-27:** Track C merged to `main` from `frontend-track-c` (booking route `/booking/:flightId`, expanded detail from seeded flights, price alerts with optional `flight_id`).
 - **2026-04-27:** Track A complete and merged to `main`. Home screen, `design.md`, `index.css` reset all shipped.
 - **2026-04-27:** Backend (Dhruv): schema migration and seed applied (25 destinations, 70 flights). Edge Function deployed and ACTIVE. `.env.example` updated with real Supabase values.
 - **2026-04-27:** `frontend` branch created. 3-track parallel build structure established.

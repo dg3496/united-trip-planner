@@ -12,7 +12,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/chat" element={<Chat />} />
-          <Route path="/booking/*" element={<Booking />} />
+          <Route path="/booking/:flightId" element={<Booking />} />
         </Routes>
       </MobileShell>
       <AppToaster />
