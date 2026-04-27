@@ -7,6 +7,14 @@
 GitHub repo live at: https://github.com/dg3496/united-trip-planner
 Team ownership: Dhruv on backend (Supabase), frontend team on React components.
 
+## Track B Stock Check (2026-04-27)
+
+Track B is the backend workstream (Supabase + Edge Function + Claude orchestration).
+
+- **Completed artifacts:** backend schema SQL, seed SQL, `chat-trip-planner` Edge Function implementation, Supabase project linkage via MCP.
+- **Remaining execution steps:** run migration, run seed, set `ANTHROPIC_API_KEY`, deploy Edge Function, pass `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to frontend, execute one end-to-end smoke test.
+- **Risk to watch:** seed currently includes 9 destinations, below target 20 to 30, which can weaken demo variety unless expanded before final rehearsal.
+
 ## What Works
 
 - **2026-04-27:** Project ideation, GTM strategy, PRD, and architectural documentation fully complete.
@@ -24,6 +32,12 @@ Team ownership: Dhruv on backend (Supabase), frontend team on React components.
 - **2026-04-27:** Config files complete: tailwind.config.js, vercel.json, .env.example, .gitignore, CLAUDE.md, README.md.
 - **2026-04-27:** GitHub repo created and initial commit pushed. Supabase MCP connected.
 - **2026-04-27:** Memory Bank added to repo at `memory-bank/`.
+- **2026-04-27:** Supabase schema applied via MCP (all 6 tables, indexes, RLS disabled).
+- **2026-04-27:** Seed data applied: 1 demo user (Alex, Gold, EWR), 25 destinations across 6 regions, 70 flights from EWR (March 2026, $249-$1049 range).
+- **2026-04-27:** chat-trip-planner Edge Function deployed (ACTIVE, JWT verify off for prototype).
+- **2026-04-27:** Project URL and anon key confirmed. .env.example updated with real values.
+- **2026-04-27:** Smoke test passed: all 25 destinations have flights, fares verified ($249 PHX to $1049 NRT).
+- **2026-04-27:** Switched LLM from Anthropic Claude to Google Gemini Flash (gemini-2.0-flash) -- free tier, same JSON contract. Edge Function redeployed as version 2. Requires GEMINI_API_KEY secret (get free at aistudio.google.com/apikey).
 
 This section will be updated as features come online. Format going forward:
 

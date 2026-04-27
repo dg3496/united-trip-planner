@@ -1,14 +1,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// ─── CORS ────────────────────────────────────────────────────────────────────
+// ─── CORS ─────────────────────────────────────────────────────────────────────
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// ─── Types (mirrors src/lib/types.ts) ────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type ResponseType = 'suggestions' | 'clarifying_question' | 'no_results' | 'conflict'
 
@@ -45,10 +45,10 @@ function buildSystemPrompt(user: Record<string, unknown>, destinations: unknown[
 PERSONA AND RULES:
 - Tone: calm, concise, helpful. Never salesy or overly enthusiastic.
 - Never use em dashes in any response.
-- Return ONLY valid JSON — no markdown fences, no prose outside the JSON object.
+- Return ONLY valid JSON -- no markdown fences, no prose outside the JSON object.
 - Only suggest destinations from the INVENTORY provided below. Never invent destinations.
 - Always include a "whyThisMatches" field tied to the user's preferences for every suggestion.
-- When returning suggestions, exactly one must have "isBestValue": true. Choose the one that gives the best overall value for this user's preferences — not just the cheapest.
+- When returning suggestions, exactly one must have "isBestValue": true. Choose the one that gives the best overall value for this user's preferences -- not just the cheapest.
 - If the user's query is too vague to filter inventory meaningfully, use responseType "clarifying_question" and ask ONE focused follow-up in assistantMessage.
 - If constraints conflict (e.g., nonstop under $300), use responseType "conflict" and suggest which constraint to relax in conflictHint.
 - If no inventory matches, use responseType "no_results" and provide an alternativeHint.
@@ -68,7 +68,7 @@ USER PROFILE:
 AVAILABLE INVENTORY (destinations + flights from ${user.home_airport}):
 ${JSON.stringify({ destinations, flights }, null, 2)}
 
-RESPONSE CONTRACT — return exactly this JSON shape:
+RESPONSE CONTRACT -- return exactly this JSON shape, nothing else:
 {
   "responseType": "suggestions" | "clarifying_question" | "no_results" | "conflict",
   "assistantMessage": "string shown as the chat bubble",
@@ -96,21 +96,74 @@ For responseType "suggestions": include exactly 3 suggestions, exactly one with 
 For other responseTypes: suggestions array must be empty [].`
 }
 
+// ─── Gemini API Call ──────────────────────────────────────────────────────────
+
+async function callGemini(
+  systemPrompt: string,
+  history: Array<{ role: string; content: string }>,
+  userMessage: string
+): Promise<string> {
+  const apiKey = Deno.env.get('GEMINI_API_KEY')!
+  const model = 'gemini-2.0-flash'
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+
+  // Convert history to Gemini format
+  // Gemini uses "user" and "model" (not "assistant")
+  const contents = [
+    ...history.map((h) => ({
+      role: h.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: h.content }],
+    })),
+    { role: 'user', parts: [{ text: userMessage }] },
+  ]
+
+  const body = {
+    system_instruction: {
+      parts: [{ text: systemPrompt }],
+    },
+    contents,
+    generationConfig: {
+      responseMimeType: 'application/json',  // Forces clean JSON output
+      temperature: 0.4,
+      maxOutputTokens: 1500,
+    },
+  }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    console.error('Gemini API error:', res.status, err)
+    throw new Error(`Gemini API returned ${res.status}`)
+  }
+
+  const json = await res.json()
+  return json.candidates[0].content.parts[0].text
+}
+
 // ─── Response Validation ──────────────────────────────────────────────────────
 
-function parseAndValidateClaudeResponse(
+function parseAndValidateResponse(
   rawText: string,
   destinations: Array<{ id: string }>
 ): TripPlannerResponse {
-  // Strip markdown fences if Claude wraps output in them
-  const cleaned = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
+  // Strip markdown fences just in case
+  const cleaned = rawText
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/```\s*$/i, '')
+    .trim()
 
   let parsed: TripPlannerResponse
 
   try {
     parsed = JSON.parse(cleaned)
   } catch {
-    console.error('Claude returned invalid JSON:', rawText)
+    console.error('Gemini returned invalid JSON:', rawText)
     return {
       responseType: 'no_results',
       assistantMessage: "I'm having trouble right now. Please try again.",
@@ -131,14 +184,12 @@ function parseAndValidateClaudeResponse(
   if (parsed.responseType === 'suggestions' && parsed.suggestions?.length > 0) {
     const bestCount = parsed.suggestions.filter((s) => s.isBestValue).length
     if (bestCount === 0) {
-      // Mark the cheapest as best value
       const cheapestIdx = parsed.suggestions.reduce(
         (minIdx, s, idx, arr) => (s.lowestFareUsd < arr[minIdx].lowestFareUsd ? idx : minIdx),
         0
       )
       parsed.suggestions[cheapestIdx].isBestValue = true
     } else if (bestCount > 1) {
-      // Keep only the first one marked
       let found = false
       parsed.suggestions = parsed.suggestions.map((s) => {
         if (s.isBestValue && !found) { found = true; return s }
@@ -147,7 +198,7 @@ function parseAndValidateClaudeResponse(
     }
   }
 
-  // If grounding stripped all suggestions, return no_results
+  // If grounding stripped all suggestions
   if (parsed.responseType === 'suggestions' && (!parsed.suggestions || parsed.suggestions.length === 0)) {
     return {
       responseType: 'no_results',
@@ -165,7 +216,6 @@ function parseAndValidateClaudeResponse(
 // ─── Main Handler ─────────────────────────────────────────────────────────────
 
 serve(async (req) => {
-  // CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -180,7 +230,7 @@ serve(async (req) => {
       )
     }
 
-    // Service-role client — bypasses RLS for server-side operations
+    // Service-role client -- bypasses RLS
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -208,7 +258,7 @@ serve(async (req) => {
       .order('created_at', { ascending: true })
       .limit(20)
 
-    // Fetch full inventory from EWR (small enough to pass wholesale)
+    // Fetch full inventory
     const { data: destinations } = await supabase.from('destinations').select('*')
     const { data: flights } = await supabase
       .from('flights')
@@ -228,44 +278,14 @@ serve(async (req) => {
       .update({ last_active_at: new Date().toISOString() })
       .eq('id', conversationId)
 
-    // Build system prompt
+    // Build system prompt and call Gemini
     const systemPrompt = buildSystemPrompt(user, destinations ?? [], flights ?? [])
-
-    // Call Claude
-    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': Deno.env.get('ANTHROPIC_API_KEY')!,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 1500,
-        system: systemPrompt,
-        messages: [
-          ...(history ?? []).map((h: { role: string; content: string }) => ({
-            role: h.role,
-            content: h.content,
-          })),
-          { role: 'user', content: messageText.trim() },
-        ],
-      }),
-    })
-
-    if (!claudeRes.ok) {
-      const errBody = await claudeRes.text()
-      console.error('Claude API error:', claudeRes.status, errBody)
-      throw new Error(`Claude API returned ${claudeRes.status}`)
-    }
-
-    const claudeJson = await claudeRes.json()
-    const rawText: string = claudeJson.content[0].text
+    const rawText = await callGemini(systemPrompt, history ?? [], messageText.trim())
 
     // Validate and ground the response
-    const structured = parseAndValidateClaudeResponse(rawText, destinations ?? [])
+    const structured = parseAndValidateResponse(rawText, destinations ?? [])
 
-    // Persist assistant turn with full metadata
+    // Persist assistant turn
     await supabase.from('messages').insert({
       conversation_id: conversationId,
       role: 'assistant',
