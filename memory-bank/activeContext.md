@@ -73,6 +73,9 @@ Deliverables:
 
 ## Recent Changes
 
+- **2026-04-27:** Frontend premium quality pass on `main`: improved visual hierarchy across TopBar, BottomNav, MessageList, MessageBubble, DestinationCard, ExpandedFlightDetail, and Booking surfaces.
+- **2026-04-27:** Added `/alerts` page and route so BottomNav "Alerts" no longer routes to a missing page.
+- **2026-04-27:** Updated example prompt copy to remove em dash usage in UI strings.
 - **2026-04-27:** Track C merged to `main` from `frontend-track-c` (booking route `/booking/:flightId`, expanded detail from seeded flights, price alerts with optional `flight_id`).
 - **2026-04-27:** Frontend Track B merged into `main` (`frontend-track-b` -> `main`). Chat core mobile UX improvements shipped: prompt chips, loading indicator rotation, iOS keyboard offset handling, and message list layout fixes.
 - **2026-04-27:** Track A complete and merged to `main`. Home screen, `design.md`, `index.css` reset all shipped.

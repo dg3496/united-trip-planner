@@ -90,7 +90,7 @@ export default function Booking() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gradient-to-b from-slate-50 to-white">
       <TopBar title="Confirm Booking" showBack />
       <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
         {loading ? (
@@ -105,7 +105,7 @@ export default function Booking() {
               <p className="text-xl font-bold text-[#003087]">EWR to {cityLabel}</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 flex flex-col gap-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-5 border border-slate-200/80 flex flex-col gap-4 shadow-[0_12px_28px_rgba(15,23,42,0.08)]">
               <Row
                 label="Outbound"
                 value={new Date(flight!.outbound_date).toLocaleDateString('en-US', {
@@ -133,7 +133,7 @@ export default function Booking() {
                   value={fareClass}
                   onChange={(e) => setFareClass(e.target.value as FareChoice)}
                   disabled={confirmed}
-                  className="text-sm font-medium border border-gray-200 rounded-xl px-3 py-2.5 bg-white text-gray-900"
+                  className="text-sm font-medium border border-gray-200 rounded-xl px-3 py-2.5 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#003087]/20"
                 >
                   <option value="economy">Economy</option>
                   <option value="economy_plus">Economy Plus</option>
@@ -157,7 +157,7 @@ export default function Booking() {
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="w-full bg-[#003087] text-white font-semibold py-4 rounded-2xl active:bg-[#002070] transition-colors"
+                className="w-full bg-gradient-to-b from-[#003FA3] to-[#003087] text-white font-semibold py-4 rounded-2xl active:from-[#003087] active:to-[#00276E] transition-colors shadow-[0_10px_24px_rgba(0,48,135,0.28)]"
               >
                 Confirm Booking
               </button>

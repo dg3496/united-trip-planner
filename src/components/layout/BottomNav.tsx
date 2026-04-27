@@ -12,7 +12,7 @@ export function BottomNav() {
   const { pathname } = useLocation()
 
   return (
-    <div className="border-t border-gray-100 bg-white flex-shrink-0 pb-safe">
+    <div className="border-t border-slate-200/80 bg-white/95 backdrop-blur-sm flex-shrink-0 pb-safe">
       <div className="flex">
         {tabs.map(({ icon: Icon, label, path }) => {
           const active = pathname === path || (path === '/chat' && pathname.startsWith('/chat'))
@@ -21,11 +21,11 @@ export function BottomNav() {
               key={path}
               onClick={() => navigate(path)}
               className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
-                active ? 'text-[#003087]' : 'text-gray-400'
+                active ? 'text-[#003087]' : 'text-slate-400'
               }`}
             >
               <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
-              <span className="text-[10px] font-medium">{label}</span>
+              <span className={`text-[10px] font-medium ${active ? 'opacity-100' : 'opacity-80'}`}>{label}</span>
             </button>
           )
         })}

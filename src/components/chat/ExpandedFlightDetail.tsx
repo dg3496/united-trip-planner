@@ -85,7 +85,7 @@ export function ExpandedFlightDetail({ suggestion, conversationId }: Props) {
   return (
     <div className="border-t border-gray-100 pt-3 flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-2 text-xs">
-        <div>
+        <div className="rounded-xl bg-slate-50 p-2.5">
           <p className="text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Outbound</p>
           <p className="font-medium">
             {new Date(flight.outbound_date).toLocaleDateString('en-US', {
@@ -100,7 +100,7 @@ export function ExpandedFlightDetail({ suggestion, conversationId }: Props) {
             {formatDurationMinutes(flight.outbound_duration_minutes)}
           </p>
         </div>
-        <div>
+        <div className="rounded-xl bg-slate-50 p-2.5">
           <p className="text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Return</p>
           <p className="font-medium">
             {new Date(flight.return_date).toLocaleDateString('en-US', {
@@ -118,11 +118,11 @@ export function ExpandedFlightDetail({ suggestion, conversationId }: Props) {
       </div>
 
       <div className="grid grid-cols-2 gap-2 text-xs">
-        <div>
+        <div className="rounded-xl bg-slate-50 p-2.5">
           <p className="text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Aircraft</p>
           <p className="font-medium">{flight.aircraft_type}</p>
         </div>
-        <div>
+        <div className="rounded-xl bg-slate-50 p-2.5">
           <p className="text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Fare class</p>
           <p className="font-medium">{fareClassLabel(flight.fare_class)}</p>
         </div>
