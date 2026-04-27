@@ -22,7 +22,7 @@ npm run dev                  # http://localhost:5173
 
 ## Architecture in one paragraph
 
-React SPA (Vite + TS + Tailwind) calls a Supabase Edge Function (`chat-trip-planner`) on every chat message. The Edge Function fetches the demo user's profile and the full flight inventory from Supabase Postgres, builds a system prompt, calls Anthropic Claude with the conversation history, validates the structured JSON response against the inventory (grounding), persists both the user and assistant turns, and returns the payload to the frontend. The frontend renders destination cards from the structured payload.
+React SPA (Vite + TS + Tailwind) calls a Supabase Edge Function (`chat-trip-planner`) on every chat message. The Edge Function fetches the demo user's profile and the full flight inventory from Supabase Postgres, builds a system prompt, calls OpenAI `gpt-4o-mini` with the conversation history, validates the structured JSON response against the inventory (grounding), persists both the user and assistant turns, and returns the payload to the frontend. The frontend renders destination cards from the structured payload.
 
 ## Shared contracts
 
@@ -52,7 +52,7 @@ supabase db push
 
 # Deploy Edge Function
 supabase functions deploy chat-trip-planner
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+supabase secrets set OPENAI_API_KEY=sk-...
 ```
 
 ## Deploy frontend
@@ -65,10 +65,10 @@ Connect the repo to Vercel. Set the three `VITE_*` env vars in Vercel project se
 - Cash bookings only, no miles+cash UI
 - Seeded fake inventory (not real flights)
 - OpenAI gpt-4o-mini is called server-side only (Edge Function), never from the browser
-- Structured JSON output from Claude (not free-form text)
+- Structured JSON output from the model (not free-form text)
 - Exactly 3 suggestions per query; exactly 1 marked Best Value
-- Conversation history capped at 20 rows (~10 turns) when passed to Claude
-- No em dashes anywhere in the UI or in Claude's system prompt
+- Conversation history capped at 20 rows (~10 turns) when passed to the model
+- No em dashes anywhere in the UI or in the system prompt
 
 ## Deferred from prototype
 

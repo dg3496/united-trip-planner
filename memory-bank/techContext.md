@@ -40,7 +40,7 @@ Note: Gemini Flash was the original choice (free tier) but had quota=0 on the pr
 | United Flight Inventory and Pricing API (internal) | Real-time flight availability, fares, seat maps | Direct Postgres query against the seeded `flights` table |
 | MileagePlus Member Service (internal) | User tier, balance, home airport, travel history | Direct Postgres query against the seeded `users` table |
 | Destination Metadata Service | Climate, activities, imagery | Flat-baked into the seeded `destinations` table |
-| LLM Provider | OpenAI GPT-4o, Anthropic Claude, or fine-tuned internal | Google Gemini Flash (gemini-2.0-flash) -- free tier |
+| LLM Provider | OpenAI GPT-4o, Anthropic Claude, or fine-tuned internal | OpenAI `gpt-4o-mini` via Chat Completions |
 | Push Notification Service (FCM/APNs) | Fires price drop alerts | Alerts persist to DB but no notifications fire |
 
 ## Performance Constraints (from production spec)
@@ -100,7 +100,7 @@ All IDs are `uuid` with `gen_random_uuid()` defaults unless noted. All timestamp
 | `conversation_id` | uuid FK -> conversations.id | Indexed |
 | `role` | text | "user" or "assistant" |
 | `content` | text | The text message |
-| `metadata` | jsonb | For assistant messages, the full structured Claude response so cards can re-render on reload |
+| `metadata` | jsonb | For assistant messages, the full structured model response so cards can re-render on reload |
 | `created_at` | timestamptz | |
 
 ### `destinations`
@@ -111,7 +111,7 @@ All IDs are `uuid` with `gen_random_uuid()` defaults unless noted. All timestamp
 | `country` | text | "Mexico" |
 | `region` | text | "Caribbean", "Europe", "Asia", etc. |
 | `tags` | text[] | `['beach','warm','budget-friendly']` used for matching |
-| `description` | text | One-sentence summary used by Claude in `whyThisMatches` synthesis |
+| `description` | text | One-sentence summary used by the model in `whyThisMatches` synthesis |
 | `image_url` | text | Stock image URL (Unsplash or similar) for the card header |
 | `popular_from_hubs` | text[] | Hub IATA codes where this is popular (`['EWR','ORD','SFO']`) |
 
@@ -195,18 +195,18 @@ serve(async (req) => {
   const systemPrompt = buildSystemPrompt(user, destinations, flights);
 
   // 9. Call OpenAI
-  const claudeResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+  const openAiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": Deno.env.get("ANTHROPIC_API_KEY")!,
-      "anthropic-version": "2023-06-01",
+      "authorization": `Bearer ${Deno.env.get("OPENAI_API_KEY")!}`,
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-5",
+      model: "gpt-4o-mini",
       max_tokens: 1500,
-      system: systemPrompt,
+      response_format: { type: "json_object" },
       messages: [
+        { role: "system", content: systemPrompt },
         ...history.map(h => ({ role: h.role, content: h.content })),
         { role: "user", content: messageText },
       ],
@@ -214,9 +214,9 @@ serve(async (req) => {
   });
 
   // 10. Extract and validate JSON
-  const claudeJson = await claudeResponse.json();
-  const rawText = claudeJson.content[0].text;
-  const structured = parseAndValidateClaudeResponse(rawText, destinations);
+  const openAiJson = await openAiResponse.json();
+  const rawText = openAiJson.choices[0].message.content;
+  const structured = parseAndValidateModelResponse(rawText, destinations);
 
   // 11. Persist assistant turn with full structured payload in metadata
   await supabase.from("messages").insert({
@@ -235,8 +235,8 @@ serve(async (req) => {
 
 Key implementation notes:
 - Use the Supabase **service role key** in the Edge Function, not the anon key, so RLS doesn't block the inserts. Never expose this to the frontend.
-- `parseAndValidateClaudeResponse` strips markdown fences if Claude wraps output in them, parses JSON, validates that every `destinationId` exists in the inventory (FR-022 grounding), and falls back to a "no_results" synthetic response if validation fails entirely.
-- Don't trust Claude to return exactly one Best Value. If multiple come back marked, keep only the first; if none, mark the cheapest. The frontend should never see ambiguous data.
+- `parseAndValidateModelResponse` parses JSON, validates that every `destinationId` exists in the inventory (FR-022 grounding), and falls back to a "no_results" synthetic response if validation fails entirely.
+- Don't trust the model to return exactly one Best Value. If multiple come back marked, keep only the first; if none, mark the cheapest. The frontend should never see ambiguous data.
 
 ## Row-Level Security (RLS) Policy
 
@@ -265,7 +265,7 @@ npm run dev    # serves on http://localhost:5173
 
 # Deploy Edge Function
 supabase functions deploy chat-trip-planner
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+supabase secrets set OPENAI_API_KEY=sk-...
 ```
 
 ## Build and Deploy
@@ -275,17 +275,17 @@ supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
 
 ## Constraints
 
-- **Anthropic API rate limits.** Not a real concern at demo volume, but be aware that aggressive testing could hit per-minute token limits. If iterating heavily, use Haiku for development and switch to Sonnet for the final demo.
+- **OpenAI API rate limits.** Not a real concern at demo volume, but be aware that aggressive testing could hit per-minute token limits.
 - **Edge Function cold starts.** Supabase Edge Functions can have ~500ms cold start. The first message in a fresh demo will be slower. Hit the function once before going on stage to warm it.
-- **No streaming in v1.** The Edge Function returns the full Claude response after Claude finishes generating. Streaming would improve perceived latency but adds complexity not justified for a 5-minute demo.
-- **No retry logic on Claude failures.** If Claude fails, the user sees an error toast and retypes. Adding retries inside the Edge Function risks blowing the 5-second SLA.
+- **No streaming in v1.** The Edge Function returns the full model response after generation completes. Streaming would improve perceived latency but adds complexity not justified for a 5-minute demo.
+- **No retry logic on model failures.** If generation fails, the user sees an error toast and retypes. Adding retries inside the Edge Function risks blowing the 5-second SLA.
 
 ## Documentation References for the Build Agent
 
-- Anthropic Messages API: https://docs.claude.com/en/api/messages
+- OpenAI Chat Completions API: https://platform.openai.com/docs/api-reference/chat/create
 - Supabase Edge Functions: https://supabase.com/docs/guides/functions
 - Supabase JS client: https://supabase.com/docs/reference/javascript/introduction
 - Vite + React + TS: https://vitejs.dev/guide/
 - Tailwind CSS: https://tailwindcss.com/docs
 
-When in doubt about an API surface (Anthropic models, Supabase syntax), read the docs rather than guessing. Both Anthropic and Supabase have evolving APIs.
+When in doubt about an API surface (OpenAI models, Supabase syntax), read the docs rather than guessing. Both OpenAI and Supabase have evolving APIs.

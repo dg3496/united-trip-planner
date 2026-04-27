@@ -16,7 +16,7 @@ _URL added after Vercel deployment._
 | State | Zustand |
 | Routing | React Router 6 |
 | Backend | Supabase (Postgres + Edge Functions) |
-| AI | Anthropic Claude (claude-sonnet-4-5) |
+| AI | OpenAI `gpt-4o-mini` |
 | Deploy | Vercel (frontend) + Supabase (backend) |
 
 ## Getting started
@@ -34,7 +34,7 @@ npm run dev                  # http://localhost:5173
 
 ```
 src/
-├── pages/           Home.tsx, Chat.tsx, Booking.tsx
+├── pages/           Home.tsx, Chat.tsx, Booking.tsx, Alerts.tsx
 ├── components/
 │   ├── chat/        MessageList, MessageBubble, DestinationCard,
 │   │                ExpandedFlightDetail, ChatInput, LoadingIndicator,
@@ -63,7 +63,7 @@ supabase/
 ## Key design decisions
 
 - Hardcoded demo user (EWR, Gold tier) — no real auth
-- Claude called server-side only, never from the browser
-- Structured JSON output from Claude; frontend renders cards from that shape
+- OpenAI `gpt-4o-mini` called server-side only, never from the browser
+- Structured JSON output from the model; frontend renders cards from that shape
 - Exactly 3 suggestions per query, exactly 1 labeled Best Value
-- No em dashes anywhere in UI copy or Claude responses
+- No em dashes anywhere in UI copy or model responses

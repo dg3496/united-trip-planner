@@ -15,7 +15,7 @@ Within 30 seconds, a user goes from "I want to travel" to seeing three concrete,
 The build is scoped to what's needed for a credible 5-minute demo. Not a production system.
 
 1. **Conversational chat interface** within a United-branded mobile shell. Welcome message, example prompts, natural language input, threaded message history.
-2. **Real AI, fake inventory.** Conversational intelligence is real (Anthropic Claude via Supabase Edge Function). Flight data is seeded but realistic (20 to 30 destinations, 3 to 5 flights each, March 2026 dates from EWR).
+2. **Real AI, fake inventory.** Conversational intelligence is real (OpenAI `gpt-4o-mini` via Supabase Edge Function). Flight data is seeded but realistic (20 to 30 destinations, 3 to 5 flights each, March 2026 dates from EWR).
 3. **Structured destination cards** with city, country, round-trip fare, dates, flight duration, a "Why this matches" explanation tied to the user's stated preferences, and a Best Value label on the top pick.
 4. **Refinement turns** that update results within the same conversation ("nonstop only", "make it cheaper") without resetting context.
 5. **Expanded flight detail view** with departure / return times, stops, aircraft type, fare class.
@@ -32,8 +32,8 @@ Solve the "Where should I travel?" problem for destination-flexible leisure trav
 ## Technical Foundation
 
 - **Frontend:** React + Vite + TypeScript Single Page Application, mobile-first, Tailwind CSS.
-- **Backend:** Supabase (PostgreSQL, Edge Functions, Auth) acting as the orchestration layer between the UI, Claude, and the seeded flight inventory.
-- **LLM:** Anthropic Claude (Sonnet) via the Messages API, called only from the Edge Function.
+- **Backend:** Supabase (PostgreSQL, Edge Functions, Auth) acting as the orchestration layer between the UI, OpenAI, and the seeded flight inventory.
+- **LLM:** OpenAI `gpt-4o-mini` via Chat Completions, called only from the Edge Function.
 
 ## Non-Goals
 

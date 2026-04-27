@@ -20,13 +20,13 @@ Track B is the chat UI core workstream (`src/pages/Chat.tsx` and chat components
 - **2026-04-27:** Project ideation, GTM strategy, PRD, and architectural documentation fully complete.
 - **2026-04-27:** Vite + React + TS project bootstrapped with Tailwind CSS, Zustand, React Router 6, supabase-js, lucide-react, sonner. Node 20 via nvm.
 - **2026-04-27:** Full directory structure created: `src/` (pages, components, lib, store, styles) and `supabase/` (functions, migrations, seed).
-- **2026-04-27:** All shared types written (`src/lib/types.ts`) matching Claude response contract exactly.
+- **2026-04-27:** All shared types written (`src/lib/types.ts`) matching the structured response contract exactly.
 - **2026-04-27:** Supabase client + Edge Function API wrapper written (`src/lib/supabase.ts`, `src/lib/api.ts`).
 - **2026-04-27:** Zustand chat store written with optimistic user message rendering and lazy conversation creation (`src/store/chatStore.ts`).
 - **2026-04-27:** All layout components written: MobileShell, TopBar, BottomNav.
 - **2026-04-27:** All chat components written: MessageBubble, MessageList, DestinationCard, ExpandedFlightDetail, ChatInput, LoadingIndicator, ExamplePrompts.
 - **2026-04-27:** Page stubs written with TODO comments for frontend team: Home, Chat, Booking.
-- **2026-04-27:** chat-trip-planner Edge Function written with full orchestration: user fetch, history fetch, inventory fetch, system prompt build, Claude call, JSON validation + grounding, persistence, CORS.
+- **2026-04-27:** chat-trip-planner Edge Function written with full orchestration: user fetch, history fetch, inventory fetch, system prompt build, model call, JSON validation + grounding, persistence, CORS.
 - **2026-04-27:** SQL schema migration written (`supabase/migrations/001_schema.sql`) — all 6 tables, indexes, RLS disabled.
 - **2026-04-27:** Seed data written (`supabase/seed/002_seed.sql`) — demo user, 9 destinations, flights for each. 15+ more destinations still needed.
 - **2026-04-27:** Config files complete: tailwind.config.js, vercel.json, .env.example, .gitignore, CLAUDE.md, README.md.
@@ -73,7 +73,7 @@ Items grouped by build phase. Each item references the PRD requirement ID where 
 - [ ] `price_alerts` table created with 90-day expiry default
 - [ ] Indexes on `messages.conversation_id`, `flights.destination_id`, `flights.origin_airport`
 - [ ] RLS disabled OR demo-user-scoped policies in place
-- [ ] `ANTHROPIC_API_KEY` set as Supabase secret
+- [x] `OPENAI_API_KEY` set as Supabase secret
 
 ### Phase 3: Edge Function
 - [ ] `chat-trip-planner` Edge Function scaffolded
@@ -81,12 +81,12 @@ Items grouped by build phase. Each item references the PRD requirement ID where 
 - [ ] Body parsing and input validation
 - [ ] User profile + history + inventory fetch logic
 - [ ] System prompt builder with persona, user profile, inventory blocks
-- [ ] Anthropic API call with conversation history passed via `messages`
-- [ ] JSON parsing and schema validation against the Claude response contract
+- [x] OpenAI API call with conversation history passed via `messages`
+- [x] JSON parsing and schema validation against the response contract
 - [ ] Grounding validation: drop suggestions referencing unknown destinationIds (FR-022)
 - [ ] Best Value normalization (exactly one suggestion marked, FR-025)
 - [ ] User and assistant message persistence
-- [ ] Edge Function deployed and pingable from the frontend
+- [x] Edge Function deployed and pingable from the frontend
 
 ### Phase 4: Home Screen (FR-001, FR-002, FR-003) — COMPLETE (2026-04-27, Track A)
 - [x] United-branded header with logo / wordmark
@@ -137,7 +137,7 @@ Items grouped by build phase. Each item references the PRD requirement ID where 
 - [ ] Tested on iPhone 14 viewport (390px wide) in Chrome DevTools and on a real phone
 - [ ] Edge Function warmed before demo to avoid cold start latency on first message
 - [ ] Demo script written: 4 to 5 talking points mapped to specific clicks
-- [ ] Backup plan in place if Anthropic API has a hiccup mid-demo (e.g., a recorded video as fallback)
+- [ ] Backup plan in place if OpenAI API has a hiccup mid-demo (e.g., a recorded video as fallback)
 - [ ] Public URL deployed and shared with the team
 - [ ] Short recorded video tour created (assignment deliverable)
 
@@ -155,7 +155,7 @@ These are real PRD requirements that are explicitly **deferred from the prototyp
 - **Real authentication.** Hardcoded demo user only.
 - **Real payment processing.** Booking confirmation is faked.
 - **Real flight inventory.** All seeded.
-- **Production fallback to curated destinations (NFR-07).** The prototype shows a retry toast on Claude failure; the production architecture has a richer fallback path.
+- **Production fallback to curated destinations (NFR-07).** The prototype shows a retry toast on model failure; the production architecture has a richer fallback path.
 - **Conversation deletion (NFR-04).** Not exposed in the prototype UI.
 - **Push notifications.** Price alerts persist to DB but no notifications fire. No background worker / cron job.
 - **Output Guardrail service, separate Destination Metadata Service, Query Cache, Local Session Tracker, Feature flag platform.** All folded or omitted per `systemPatterns.md`.
@@ -167,7 +167,7 @@ None yet. Update as they appear. Common categories to watch:
 
 - **Integration with live United Airlines APIs is not available** and never will be for this project. Relies entirely on seeded inventory.
 - **Strict 5-second latency requirement** in production specs requires highly optimized prompts; in the prototype, the smaller scale and simpler prompt should keep us comfortably under the threshold. Watch as conversation history grows.
-- **Claude returning JSON wrapped in markdown fences.** Mitigate by stripping in `parseAndValidateClaudeResponse`.
+- **Model returning malformed JSON.** Mitigate via strict response formatting plus defensive parsing and fallback handling.
 - **Latency creeping above 5 seconds during refinement turns** when conversation history grows. Mitigate by capping history at 10 turns when constructing the messages array.
 - **Mobile Safari rendering quirks** on the fixed bottom input bar (keyboard pushing layout). Test early.
 - **Edge Function cold starts** on the first message of the demo. Pre-warm before going live.

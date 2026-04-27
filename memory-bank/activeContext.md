@@ -86,7 +86,7 @@ Delivered:
 ## Previously Recorded Changes
 
 - Migrated product specification, architecture, and business model requirements from source documents into the Memory Bank.
-- Decided on React + Vite + TypeScript + Supabase + Anthropic Claude as the prototype stack.
+- Decided on React + Vite + TypeScript + Supabase with OpenAI served through Supabase Edge Functions as the prototype stack.
 - Decided to use a hardcoded demo user with full-bypass auth, rather than implementing real Supabase Auth flows.
 
 ## Key Decisions Already Made
