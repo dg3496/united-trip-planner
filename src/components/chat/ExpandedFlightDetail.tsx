@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Suggestion, DbFlight } from '../../lib/types'
-import { getCheapestFlightForDestination } from '../../lib/api'
+import { getMatchingFlight } from '../../lib/api'
 
 interface Props {
   suggestion: Suggestion
@@ -42,7 +42,7 @@ export function ExpandedFlightDetail({ suggestion, conversationId }: Props) {
   useEffect(() => {
     let cancelled = false
     setLoading(true)
-    getCheapestFlightForDestination(suggestion.destinationId).then((f) => {
+    getMatchingFlight(suggestion.destinationId, suggestion.stops, suggestion.outboundDate).then((f) => {
       if (!cancelled) {
         setFlight(f)
         setLoading(false)

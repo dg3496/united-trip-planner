@@ -1,17 +1,10 @@
-// TODO (Frontend team): Render a single chat message bubble.
-// - role === 'user': right-aligned navy bubble
-// - role === 'assistant': left-aligned white bubble with United avatar
-// - If message.metadata?.suggestions has items, render DestinationCard for each below the bubble
-// - If message.metadata?.rankingCriteria is set, render a small subtitle above the cards (FR-018)
-// - If message.metadata?.responseType === 'conflict', surface conflictHint text
-// - If message.metadata?.responseType === 'no_results', surface alternativeHint text
-
 import type { Message } from '../../lib/types'
 import { DestinationCard } from './DestinationCard'
 
 interface Props {
   message: Message
   conversationId: string | null
+  onSuggestionSelect: (text: string) => void
 }
 
 const RANKING_LABELS: Record<string, string> = {
@@ -20,7 +13,7 @@ const RANKING_LABELS: Record<string, string> = {
   shortest_duration: 'Sorted by shortest flight time',
 }
 
-export function MessageBubble({ message, conversationId }: Props) {
+export function MessageBubble({ message, conversationId, onSuggestionSelect }: Props) {
   const isUser = message.role === 'user'
   const meta = message.metadata
 
@@ -70,6 +63,22 @@ export function MessageBubble({ message, conversationId }: Props) {
           {meta.alternativeHint}
         </p>
       )}
+
+      {/* Filter suggestion chips — shown on no_results and conflict */}
+      {(meta?.responseType === 'no_results' || meta?.responseType === 'conflict') &&
+        meta.filterSuggestions && meta.filterSuggestions.length > 0 && (
+          <div className="w-full flex flex-wrap gap-2 pt-1">
+            {meta.filterSuggestions.map((chip) => (
+              <button
+                key={chip}
+                onClick={() => onSuggestionSelect(chip)}
+                className="text-xs font-medium px-3 py-2 rounded-full border border-[#003087]/30 text-[#003087] bg-white hover:bg-[#003087] hover:text-white active:bg-[#00276E] active:text-white transition-colors shadow-sm"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        )}
     </div>
   )
 }

@@ -44,7 +44,7 @@ export async function createConversation(): Promise<string> {
   return data.id
 }
 
-// Fetch the cheapest flight for a destination (booking, alerts, expanded detail)
+// Fetch the cheapest flight for a destination (booking, alerts)
 export async function getCheapestFlightForDestination(
   destinationId: string
 ): Promise<DbFlight | null> {
@@ -58,6 +58,42 @@ export async function getCheapestFlightForDestination(
 
   if (error) return null
   return data as DbFlight | null
+}
+
+// Fetch the flight that best matches the AI suggestion (stops + outbound_date).
+// Falls back to cheapest if no exact match found.
+export async function getMatchingFlight(
+  destinationId: string,
+  stops: number,
+  outboundDate: string
+): Promise<DbFlight | null> {
+  // Try exact match on stops + outbound_date first
+  const { data: exact } = await supabase
+    .from('flights')
+    .select('*')
+    .eq('destination_id', destinationId)
+    .eq('stops', stops)
+    .eq('outbound_date', outboundDate)
+    .order('fare_usd', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (exact) return exact as DbFlight
+
+  // Fallback: match stops only (closest date may differ)
+  const { data: byStops } = await supabase
+    .from('flights')
+    .select('*')
+    .eq('destination_id', destinationId)
+    .eq('stops', stops)
+    .order('fare_usd', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (byStops) return byStops as DbFlight
+
+  // Last resort: cheapest regardless of stops
+  return getCheapestFlightForDestination(destinationId)
 }
 
 // Fetch the cheapest flight for a destination (used by booking screen)
