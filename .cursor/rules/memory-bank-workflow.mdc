@@ -1,0 +1,35 @@
+---
+description: Enforce Memory Bank workflow for every task
+alwaysApply: true
+---
+
+# Mandatory Memory Bank Workflow
+
+For this repository, Memory Bank usage is required in every session.
+
+## Start of every task
+
+- Read all core files in `memory-bank/`:
+  - `projectbrief.md`
+  - `productContext.md`
+  - `activeContext.md`
+  - `systemPatterns.md`
+  - `techContext.md`
+  - `progress.md`
+- Treat these files as the primary source of project context and continuity.
+
+## During implementation
+
+- Align decisions with Memory Bank constraints and documented patterns.
+- If requirements or architecture change, reflect the change in the relevant Memory Bank files.
+
+## End of meaningful work
+
+- Update `memory-bank/activeContext.md` with current focus, recent changes, and next steps.
+- Update `memory-bank/progress.md` with milestone-level status and remaining work.
+- Keep entries concise, factual, and current.
+
+## Priority and consistency
+
+- If session context conflicts with Memory Bank, prefer Memory Bank unless the user explicitly overrides it.
+- Do not skip Memory Bank updates after significant milestones or direction changes.

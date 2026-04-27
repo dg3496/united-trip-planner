@@ -24,7 +24,7 @@ export default function Chat() {
   }, [error, clearError])
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0 bg-gradient-to-b from-slate-50 to-white">
       <TopBar title="Trip Planner" showBack={false} />
       <MessageList
         messages={messages}

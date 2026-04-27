@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { Clock, Plane, Star, Bell, ChevronDown, ChevronUp } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import type { Suggestion } from '../../lib/types'
-import { setPriceAlert } from '../../lib/api'
+import { getCheapestFlightForDestination, setPriceAlert } from '../../lib/api'
 import { ExpandedFlightDetail } from './ExpandedFlightDetail'
 
 interface Props {
@@ -14,18 +13,15 @@ interface Props {
 export function DestinationCard({ suggestion, conversationId }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [alertSet, setAlertSet] = useState(false)
-  const navigate = useNavigate()
+
 
   const durationHours = Math.floor(suggestion.flightDurationMinutes / 60)
   const durationMins = suggestion.flightDurationMinutes % 60
 
   async function handlePriceAlert() {
     try {
-      // flight_id not in the suggestion — we pass destination_id for the alert.
-      // The Edge Function stores the cheapest flight id; here we persist the alert
-      // against the destination for the demo. In production this would resolve
-      // to a specific flight_id.
-      await setPriceAlert(suggestion.destinationId, '', suggestion.lowestFareUsd)
+      const flight = await getCheapestFlightForDestination(suggestion.destinationId)
+      await setPriceAlert(suggestion.destinationId, flight?.id ?? null, suggestion.lowestFareUsd)
       setAlertSet(true)
       toast.success("We'll let you know if the price drops")
     } catch {
@@ -34,7 +30,7 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-[0_10px_28px_rgba(15,23,42,0.08)] border border-slate-200/80 overflow-hidden">
       {/* Header image area */}
       <div className="relative h-32 bg-gradient-to-br from-[#003087] to-[#0056B8]">
         <img
@@ -46,10 +42,11 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
           }}
         />
         {suggestion.isBestValue && (
-          <span className="absolute top-3 left-3 bg-[#C8960C] text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+          <span className="absolute top-3 left-3 bg-[#C8960C] text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
             <Star size={10} fill="white" /> Best Value
           </span>
         )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent pointer-events-none" />
         <div className="absolute bottom-3 left-3 text-white">
           <p className="font-bold text-lg leading-tight drop-shadow">{suggestion.city}</p>
           <p className="text-xs opacity-90 drop-shadow">{suggestion.country}</p>
@@ -63,7 +60,7 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
       {/* Body */}
       <div className="p-4 flex flex-col gap-3">
         {/* Flight summary */}
-        <div className="flex items-center gap-4 text-xs text-gray-500">
+        <div className="flex items-center gap-4 text-xs text-slate-500">
           <span className="flex items-center gap-1">
             <Plane size={12} />
             {suggestion.stops === 0 ? 'Nonstop' : `${suggestion.stops} stop`}
@@ -80,7 +77,7 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
         </div>
 
         {/* Why this matches — FR-023 */}
-        <p className="text-sm text-gray-700 leading-relaxed">{suggestion.whyThisMatches}</p>
+        <p className="text-sm text-slate-700 leading-relaxed">{suggestion.whyThisMatches}</p>
 
         {/* Trade-off — FR-024 */}
         {suggestion.tradeOff && (
@@ -113,7 +110,7 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
           <button
             onClick={handlePriceAlert}
             disabled={alertSet}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2.5 rounded-xl border transition-colors ${
+            className={`w-full flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-2.5 rounded-xl border transition-colors ${
               alertSet
                 ? 'border-green-200 text-green-700 bg-green-50'
                 : 'border-gray-200 text-gray-600 hover:border-[#003087]/30 hover:text-[#003087] active:bg-gray-50'

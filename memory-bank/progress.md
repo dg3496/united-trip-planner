@@ -2,10 +2,18 @@
 
 ## Current Status
 
-**Phase 1 and Phase 2 scaffolding complete. Backend setup in progress.**
+**Phases 1 to 8 merged to `main` across Tracks A, B, and C. Phase 9 polish and demo prep remain in progress.**
 
 GitHub repo live at: https://github.com/dg3496/united-trip-planner
 Team ownership: Dhruv on backend (Supabase), frontend team on React components.
+
+## Frontend Track B Stock Check (2026-04-27)
+
+Track B is the chat UI core workstream (`src/pages/Chat.tsx` and chat components).
+
+- **Completed artifacts:** chat container mobile layout, message list scroll behavior, prompt chip UI, loading indicator rotation, and iOS keyboard offset handling in chat input.
+- **Merge status:** `frontend-track-b` has been merged into `main`.
+- **Remaining dependencies:** Phase 9 polish and final end-to-end demo validation.
 
 ## What Works
 
@@ -36,6 +44,11 @@ Team ownership: Dhruv on backend (Supabase), frontend team on React components.
 This section will be updated as features come online. Format going forward:
 
 > **YYYY-MM-DD:** Feature X works end-to-end. Notes on caveats.
+
+- **2026-04-27:** Track C (Phases 6 to 8 handoff) merged to `main` from `frontend-track-c`: expanded detail from seeded `flights`, booking at `/booking/:flightId`, price alerts with resolved or null `flight_id`.
+- **2026-04-27:** Home screen (Phase 4) complete on `frontend-track-a`. Visually verified in browser at localhost:5173. Nav, CTA, featured destinations, and resume card all render correctly. Both `frontend` and `frontend-track-a` branches pushed to GitHub.
+- **2026-04-27:** Chat core (Track B, Phase 5) merged to `main` from `frontend-track-b`.
+- **2026-04-27:** Frontend quality polish pass merged on `main`: premium styling refinements across nav, chat, cards, expanded details, and booking, plus new `/alerts` page to resolve BottomNav dead-end.
 
 ## Build Checklist
 
@@ -75,11 +88,14 @@ Items grouped by build phase. Each item references the PRD requirement ID where 
 - [ ] User and assistant message persistence
 - [ ] Edge Function deployed and pingable from the frontend
 
-### Phase 4: Home Screen (FR-001, FR-002, FR-003)
-- [ ] United-branded header with logo / wordmark
-- [ ] "Not sure where to go?" banner with prominent CTA into chat (FR-003)
-- [ ] Bottom nav with a "Plan a Trip" tab (FR-002)
-- [ ] Tapping the banner OR the nav opens the chat with a new conversation
+### Phase 4: Home Screen (FR-001, FR-002, FR-003) — COMPLETE (2026-04-27, Track A)
+- [x] United-branded header with logo / wordmark
+- [x] "Not sure where to go?" banner with prominent CTA into chat (FR-003)
+- [x] Bottom nav with a "Plan a Trip" tab (FR-002)
+- [x] Tapping the banner OR the nav opens the chat with a new conversation
+- [x] Resume card shown when active conversation exists in Zustand store
+- [x] Featured destinations section (Cancun, Paris, Honolulu, Tokyo) — static, tap to start new trip
+- [x] Fixed src/index.css (removed Vite default styles conflicting with MobileShell)
 
 ### Phase 5: Chat UI
 - [ ] Welcome message rendered on first open with example prompts (FR-005)

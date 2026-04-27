@@ -27,14 +27,21 @@ export function MessageBubble({ message, conversationId }: Props) {
   return (
     <div className={`flex flex-col gap-3 px-4 py-1 ${isUser ? 'items-end' : 'items-start'}`}>
       {/* Message bubble */}
-      <div
-        className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-          isUser
-            ? 'bg-[#003087] text-white rounded-tr-sm'
-            : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'
-        }`}
-      >
-        {message.content}
+      <div className={`max-w-[85%] flex items-start gap-2.5 ${isUser ? 'justify-end' : ''}`}>
+        {!isUser && (
+          <div className="w-7 h-7 rounded-full bg-[#003087] text-white text-xs font-bold flex items-center justify-center mt-1 shadow-sm">
+            U
+          </div>
+        )}
+        <div
+          className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+            isUser
+              ? 'bg-gradient-to-b from-[#003087] to-[#00276E] text-white rounded-tr-sm shadow-[0_8px_20px_rgba(0,48,135,0.3)]'
+              : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm'
+          }`}
+        >
+          {message.content}
+        </div>
       </div>
 
       {/* Destination cards (assistant only) */}
