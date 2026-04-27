@@ -32,48 +32,65 @@ interface TripPlannerResponse {
   filterSuggestions: string[]
 }
 
+// Trim inventory to only fields the model needs — keeps token count low
+function trimDestination(d: Record<string, unknown>) {
+  return { id: d.id, city: d.city, country: d.country, region: d.region, tags: d.tags, description: d.description }
+}
+
+function trimFlight(f: Record<string, unknown>) {
+  return {
+    destination_id: f.destination_id,
+    outbound_date: f.outbound_date,
+    return_date: f.return_date,
+    outbound_duration_minutes: f.outbound_duration_minutes,
+    stops: f.stops,
+    fare_usd: f.fare_usd,
+    fare_class: f.fare_class,
+  }
+}
+
 function buildSystemPrompt(user: Record<string, unknown>, destinations: unknown[], flights: unknown[]): string {
   const prefs = user.preferences as Record<string, unknown>
 
+  const trimmedDests = (destinations as Record<string, unknown>[]).map(trimDestination)
+  const trimmedFlights = (flights as Record<string, unknown>[]).map(trimFlight)
+
   return `You are the United Airlines AI Trip Planner. Help travelers discover destinations that match their needs.
 
-PERSONA AND RULES:
+RULES:
 - Tone: calm, concise, helpful. Never salesy.
 - Never use em dashes.
-- Return ONLY valid JSON. No markdown, no text outside the JSON.
+- Return ONLY valid JSON. No markdown, no text outside the JSON object.
 - Only suggest destinations from the INVENTORY below. Never invent destinations.
-- assistantMessage must never be empty. 1-2 sentences summarizing what you found or why there's an issue.
+- assistantMessage must never be empty. Write 1-2 sentences about what you found or what the issue is.
+- Use the conversation history to understand what constraints the user has stated so far. Only apply constraints the user has explicitly requested -- do not invent constraints they did not mention.
 
-CONSTRAINT MEMORY (critical):
-- Maintain ALL constraints the user has stated across the entire conversation.
-- If the user said "nonstop only" in a previous turn, that constraint stays active unless they explicitly remove it.
-- When the user says something vague like "show cheaper options" or "show more options", keep all prior constraints and interpret the request within those constraints.
-- If keeping prior constraints makes it impossible to find results, respond with responseType "conflict" and ask the user WHICH constraint to relax -- never silently drop one.
-- Example: user says "nonstop only" → no results → user says "show cheapest" → you should either show cheapest nonstop OR ask "Should I keep the nonstop requirement or relax it to find cheaper options?"
-
-RESPONSE TYPES:
-- "suggestions": default, return 3 results matching all active constraints
-- "clarifying_question": query is too vague (e.g. "I want to travel"), ask ONE focused follow-up
-- "conflict": active constraints together make it impossible to find results -- explain which constraints conflict and ask which to relax
-- "no_results": constraints are clear but genuinely nothing in inventory matches -- rare, prefer "conflict" when the issue is a constraint tension
+CONSTRAINT HANDLING:
+- Apply only constraints the user has explicitly stated in this conversation.
+- If the user adds a new constraint in a follow-up (e.g. "nonstop only"), keep all prior constraints active too.
+- If a follow-up is vague (e.g. "show more" or "show cheaper"), re-run within the same set of active constraints.
+- Use responseType "conflict" only when the user's explicit constraints genuinely conflict with each other AND no results exist. Do not use conflict if results are available.
+- Use responseType "no_results" only when there are truly no matching flights in inventory.
+- Default to responseType "suggestions" whenever 3 or more matching flights exist.
 
 FILTER SUGGESTIONS (for no_results and conflict only):
-- Populate filterSuggestions with 3-4 short, tap-friendly phrases the user can send to refine their search.
-- These should be actionable alternatives, e.g.: "Remove nonstop requirement", "Increase budget to $600", "Try 1 stop flights", "Show any beach destination"
-- Keep each phrase under 8 words. No punctuation at the end.
-- For suggestions responseType, filterSuggestions must be [].
+- Return 3-4 short tap-friendly phrases the user can send to try a different search.
+- Keep each under 8 words, no punctuation. E.g. "Remove nonstop requirement", "Increase budget to $600".
+- For "suggestions" responseType, filterSuggestions must be [].
 
 BEST VALUE:
-- Exactly one suggestion must have isBestValue: true -- the best overall value, not just cheapest.
+- Exactly one suggestion must have isBestValue: true -- best overall value, not just cheapest.
 
 USER PROFILE:
-- Name: ${user.display_name}, Airport: ${user.home_airport}, Tier: ${user.mileage_plus_tier}
-- Miles: ${user.mileage_balance}, Style: ${prefs?.travelStyle ?? 'leisure'}, Budget: $${prefs?.budgetCeilingUsd ?? 800} USD RT
+- Name: ${user.display_name}, Home airport: ${user.home_airport}, Tier: ${user.mileage_plus_tier}
+- Miles: ${user.mileage_balance}, Travel style: ${prefs?.travelStyle ?? 'leisure'}
+- Budget ceiling: $${prefs?.budgetCeilingUsd ?? 800} USD round trip
 - Seat preference: ${prefs?.seatPreference ?? 'aisle'}
-- Recently visited (skip): ${(user.recent_destinations as string[])?.join(', ') || 'none'}
+- Recently visited (skip these): ${(user.recent_destinations as string[])?.join(', ') || 'none'}
 
-INVENTORY (destinations + flights from ${user.home_airport}):
-${JSON.stringify({ destinations, flights })}
+INVENTORY:
+Destinations: ${JSON.stringify(trimmedDests)}
+Flights from ${user.home_airport}: ${JSON.stringify(trimmedFlights)}
 
 RESPONSE CONTRACT (return nothing else):
 {
@@ -82,13 +99,13 @@ RESPONSE CONTRACT (return nothing else):
   "rankingCriteria": "best_match|lowest_price|shortest_duration|null",
   "suggestions": [
     {
-      "destinationId": "IATA",
+      "destinationId": "IATA code from inventory",
       "city": "string",
       "country": "string",
       "whyThisMatches": "one sentence tied to user preferences",
       "tradeOff": "one sentence or null",
       "isBestValue": true or false,
-      "lowestFareUsd": integer,
+      "lowestFareUsd": integer (from inventory),
       "outboundDate": "YYYY-MM-DD",
       "returnDate": "YYYY-MM-DD",
       "flightDurationMinutes": integer,
@@ -97,11 +114,11 @@ RESPONSE CONTRACT (return nothing else):
   ],
   "conflictHint": "string or null",
   "alternativeHint": "string or null",
-  "filterSuggestions": ["phrase 1", "phrase 2", "phrase 3"]
+  "filterSuggestions": []
 }
 
-For responseType "suggestions": exactly 3 items, exactly one isBestValue true, filterSuggestions=[].
-For other responseTypes: suggestions=[], filterSuggestions has 3-4 actionable phrases.`
+For "suggestions": exactly 3 items, exactly one isBestValue true, filterSuggestions=[].
+For all other types: suggestions=[], filterSuggestions has 3-4 actionable phrases.`
 }
 
 async function callOpenAI(
@@ -120,15 +137,12 @@ async function callOpenAI(
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'gpt-4o-mini',
       messages,
       max_tokens: 1500,
-      temperature: 0.4,
+      temperature: 0.3,
       response_format: { type: 'json_object' },
     }),
   })
@@ -172,9 +186,7 @@ function parseAndValidateResponse(rawText: string, destinations: Array<{ id: str
   }
 
   // Ensure filterSuggestions is always an array
-  if (!Array.isArray(parsed.filterSuggestions)) {
-    parsed.filterSuggestions = []
-  }
+  if (!Array.isArray(parsed.filterSuggestions)) parsed.filterSuggestions = []
 
   // FR-022 grounding: strip suggestions with unknown destinationIds
   const validIds = new Set(destinations.map((d) => d.id))
@@ -187,7 +199,7 @@ function parseAndValidateResponse(rawText: string, destinations: Array<{ id: str
     const bestCount = parsed.suggestions.filter((s) => s.isBestValue).length
     if (bestCount === 0) {
       const cheapestIdx = parsed.suggestions.reduce(
-        (minIdx, s, idx, arr) => (s.lowestFareUsd < arr[minIdx].lowestFareUsd ? idx : minIdx), 0
+        (mi, s, i, a) => (s.lowestFareUsd < a[mi].lowestFareUsd ? i : mi), 0
       )
       parsed.suggestions[cheapestIdx].isBestValue = true
     } else if (bestCount > 1) {
@@ -197,7 +209,6 @@ function parseAndValidateResponse(rawText: string, destinations: Array<{ id: str
         return { ...s, isBestValue: false }
       })
     }
-    // Clear filterSuggestions for suggestions responses
     parsed.filterSuggestions = []
   }
 
@@ -205,7 +216,7 @@ function parseAndValidateResponse(rawText: string, destinations: Array<{ id: str
   if (parsed.responseType === 'suggestions' && (!parsed.suggestions || parsed.suggestions.length === 0)) {
     return {
       responseType: 'no_results',
-      assistantMessage: "I couldn't find flights matching your request from our current inventory.",
+      assistantMessage: "I couldn't find flights matching your request in our current inventory.",
       rankingCriteria: null,
       suggestions: [],
       conflictHint: null,
@@ -234,10 +245,7 @@ serve(async (req) => {
 
     const { data: user, error: userErr } = await supabase.from('users').select('*').eq('id', userId).single()
     if (userErr || !user) {
-      return new Response(
-        JSON.stringify({ error: 'User not found' }),
-        { status: 404, headers: { ...corsHeaders, 'content-type': 'application/json' } }
-      )
+      return new Response(JSON.stringify({ error: 'User not found' }), { status: 404, headers: { ...corsHeaders, 'content-type': 'application/json' } })
     }
 
     const { data: history } = await supabase
@@ -263,20 +271,14 @@ serve(async (req) => {
       metadata: structured,
     })
 
-    return new Response(JSON.stringify(structured), {
-      headers: { ...corsHeaders, 'content-type': 'application/json' },
-    })
+    return new Response(JSON.stringify(structured), { headers: { ...corsHeaders, 'content-type': 'application/json' } })
   } catch (err) {
     console.error('Edge Function error:', err)
     return new Response(
       JSON.stringify({
         responseType: 'no_results',
         assistantMessage: "I'm having trouble right now. Please try again.",
-        rankingCriteria: null,
-        suggestions: [],
-        conflictHint: null,
-        alternativeHint: null,
-        filterSuggestions: [],
+        rankingCriteria: null, suggestions: [], conflictHint: null, alternativeHint: null, filterSuggestions: [],
       }),
       { status: 200, headers: { ...corsHeaders, 'content-type': 'application/json' } }
     )
