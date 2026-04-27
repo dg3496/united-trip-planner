@@ -48,6 +48,7 @@ PERSONA AND RULES:
 - Return ONLY valid JSON -- no markdown fences, no prose outside the JSON object.
 - Only suggest destinations from the INVENTORY provided below. Never invent destinations.
 - Always include a "whyThisMatches" field tied to the user's preferences for every suggestion.
+- assistantMessage must NEVER be empty. For suggestions: write 1-2 sentences introducing the results. For other types: explain what happened.
 - When returning suggestions, exactly one must have "isBestValue": true. Choose the one that gives the best overall value for this user's preferences -- not just the cheapest.
 - If the user's query is too vague to filter inventory meaningfully, use responseType "clarifying_question" and ask ONE focused follow-up in assistantMessage.
 - If constraints conflict (e.g., nonstop under $300), use responseType "conflict" and suggest which constraint to relax in conflictHint.
@@ -66,12 +67,12 @@ USER PROFILE:
 - Recently visited (deprioritize): ${(user.recent_destinations as string[])?.join(', ') || 'none'}
 
 AVAILABLE INVENTORY (destinations + flights from ${user.home_airport}):
-${JSON.stringify({ destinations, flights }, null, 2)}
+${JSON.stringify({ destinations, flights })}
 
 RESPONSE CONTRACT -- return exactly this JSON shape, nothing else:
 {
   "responseType": "suggestions" | "clarifying_question" | "no_results" | "conflict",
-  "assistantMessage": "string shown as the chat bubble",
+  "assistantMessage": "string shown as the chat bubble -- never empty",
   "rankingCriteria": "best_match" | "lowest_price" | "shortest_duration" | null,
   "suggestions": [
     {
@@ -96,53 +97,47 @@ For responseType "suggestions": include exactly 3 suggestions, exactly one with 
 For other responseTypes: suggestions array must be empty [].`
 }
 
-// ─── Gemini API Call ──────────────────────────────────────────────────────────
+// ─── OpenAI API Call ──────────────────────────────────────────────────────────
 
-async function callGemini(
+async function callOpenAI(
   systemPrompt: string,
   history: Array<{ role: string; content: string }>,
   userMessage: string
 ): Promise<string> {
-  const apiKey = Deno.env.get('GEMINI_API_KEY')!
-  const model = 'gemini-2.0-flash'
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+  const apiKey = Deno.env.get('OPENAI_API_KEY')
+  if (!apiKey) throw new Error('OPENAI_API_KEY secret is not set')
 
-  // Convert history to Gemini format
-  // Gemini uses "user" and "model" (not "assistant")
-  const contents = [
-    ...history.map((h) => ({
-      role: h.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: h.content }],
-    })),
-    { role: 'user', parts: [{ text: userMessage }] },
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    ...history.map((h) => ({ role: h.role, content: h.content })),
+    { role: 'user', content: userMessage },
   ]
 
-  const body = {
-    system_instruction: {
-      parts: [{ text: systemPrompt }],
-    },
-    contents,
-    generationConfig: {
-      responseMimeType: 'application/json',  // Forces clean JSON output
-      temperature: 0.4,
-      maxOutputTokens: 1500,
-    },
-  }
-
-  const res = await fetch(url, {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages,
+      max_tokens: 1500,
+      temperature: 0.4,
+      response_format: { type: 'json_object' },
+    }),
   })
 
   if (!res.ok) {
     const err = await res.text()
-    console.error('Gemini API error:', res.status, err)
-    throw new Error(`Gemini API returned ${res.status}`)
+    console.error(`OpenAI ${res.status}:`, err)
+    throw new Error(`OpenAI API ${res.status}`)
   }
 
   const json = await res.json()
-  return json.candidates[0].content.parts[0].text
+  const text = json.choices?.[0]?.message?.content
+  if (!text) throw new Error('OpenAI returned empty content')
+  return text
 }
 
 // ─── Response Validation ──────────────────────────────────────────────────────
@@ -163,7 +158,7 @@ function parseAndValidateResponse(
   try {
     parsed = JSON.parse(cleaned)
   } catch {
-    console.error('Gemini returned invalid JSON:', rawText)
+    console.error('OpenAI returned invalid JSON:', rawText.slice(0, 200))
     return {
       responseType: 'no_results',
       assistantMessage: "I'm having trouble right now. Please try again.",
@@ -171,6 +166,15 @@ function parseAndValidateResponse(
       suggestions: [],
       conflictHint: null,
       alternativeHint: null,
+    }
+  }
+
+  // Ensure assistantMessage is never empty
+  if (!parsed.assistantMessage?.trim()) {
+    if (parsed.responseType === 'suggestions') {
+      parsed.assistantMessage = "Here are some destinations that match your trip."
+    } else {
+      parsed.assistantMessage = "Let me help you find the right trip."
     }
   }
 
@@ -278,9 +282,9 @@ serve(async (req) => {
       .update({ last_active_at: new Date().toISOString() })
       .eq('id', conversationId)
 
-    // Build system prompt and call Gemini
+    // Build system prompt and call OpenAI
     const systemPrompt = buildSystemPrompt(user, destinations ?? [], flights ?? [])
-    const rawText = await callGemini(systemPrompt, history ?? [], messageText.trim())
+    const rawText = await callOpenAI(systemPrompt, history ?? [], messageText.trim())
 
     // Validate and ground the response
     const structured = parseAndValidateResponse(rawText, destinations ?? [])

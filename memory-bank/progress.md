@@ -38,6 +38,8 @@ Track B is the chat UI core workstream (`src/pages/Chat.tsx` and chat components
 - **2026-04-27:** Project URL and anon key confirmed. .env.example updated with real values.
 - **2026-04-27:** Smoke test passed: all 25 destinations have flights, fares verified ($249 PHX to $1049 NRT).
 - **2026-04-27:** Switched LLM from Anthropic Claude to Google Gemini Flash (gemini-2.0-flash) -- free tier, same JSON contract. Edge Function redeployed as version 2. Requires GEMINI_API_KEY secret (get free at aistudio.google.com/apikey).
+- **2026-04-27:** Switched LLM from Gemini Flash to OpenAI gpt-4o-mini. Gemini had quota=0 on free tier account. OPENAI_API_KEY set in Supabase Vault. Edge Function redeployed as v12 (ACTIVE).
+- **2026-04-27:** End-to-end smoke test PASSED. Query "Beach trip under $500 in March" returned responseType "suggestions" with 3 grounded cards: SJU $279 (Best Value, nonstop 270min), MBJ $419 (nonstop 250min), PHX $299 (nonstop 330min). assistantMessage populated. DB persistence confirmed. Backend is fully operational.
 
 This section will be updated as features come online. Format going forward:
 

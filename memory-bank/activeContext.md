@@ -2,8 +2,8 @@
 
 ## Current Focus
 
-**Frontend (Abhinav) and Backend (Dhruv) running in parallel.**
-Backend is deployed and active. Frontend Tracks A, B, and C are merged to `main`.
+**Backend complete and end-to-end verified. Frontend Tracks A, B, and C merged to `main`.**
+All phases 1 through 8 are shipped. Phase 9 (polish and demo prep) remains.
 
 GitHub repo: https://github.com/dg3496/united-trip-planner
 Active branch: `main`
@@ -11,28 +11,22 @@ Supabase project ref: jexqrbxpgxnmwxgkyinn
 
 ---
 
-## Backend Status (Dhruv — Track B Backend)
+## Backend Status (Dhruv) — ALL DONE
 
 1. ~~Apply schema migration via MCP~~ **DONE**
 2. ~~Seed demo user + destinations + flights~~ **DONE** (25 destinations, 70 flights)
-3. Set API key secret — **PENDING** (add via Supabase dashboard > Settings > Edge Functions > Secrets)
-4. ~~Deploy chat-trip-planner Edge Function~~ **DONE** (ACTIVE)
-5. ~~Get project URL + anon key for .env.local~~ **DONE** (values in .env.example)
-
-**Frontend team action required:** Copy `.env.example` to `.env.local` and fill in the real values, then run `npm run dev` to connect to the live backend.
-
----
-
-## Frontend Team Split (3 Parallel Tracks)
-
-All three tracks work off the `frontend` branch. Each person commits to their own sub-branch (`frontend-track-a`, `frontend-track-b`, `frontend-track-c`) and opens a PR into `frontend` when done. Merge order: B first (chat core), then A and C, then `frontend` → `main`.
+3. ~~Set OPENAI_API_KEY secret~~ **DONE** (set in Supabase Vault)
+4. ~~Deploy chat-trip-planner Edge Function~~ **DONE** (v12, ACTIVE, OpenAI gpt-4o-mini)
+5. ~~End-to-end smoke test~~ **DONE** (3 cards returned, Best Value labeled, assistantMessage populated)
+6. ~~Push backend branch with OpenAI changes~~ **DONE**
 
 ---
 
-### Track A — Home Screen + Polish + Deploy ✅ COMPLETE
+## Frontend Team Split (3 Parallel Tracks) — ALL COMPLETE
+
+### Track A — Home Screen + Polish + Deploy ✅ MERGED TO `main`
 **Assigned to:** Abhinav
 **Branch:** `frontend-track-a` (merged into `frontend` and `main`)
-**Stack:** React + Vite + TypeScript + Tailwind (no Next.js, no Vercel)
 
 Delivered:
 - Full United-branded home screen: TopBar, hero, "Not sure where to go?" CTA (FR-001, FR-003), BottomNav (FR-002)
@@ -43,31 +37,36 @@ Delivered:
 
 ---
 
-### Track B — Chat UI Core ✅ COMPLETE
+### Track B — Chat UI Core ✅ MERGED TO `main`
 **Files:** `src/pages/Chat.tsx`, `src/components/chat/MessageList.tsx`, `src/components/chat/ChatInput.tsx`, `src/components/chat/ExamplePrompts.tsx`, `src/components/chat/LoadingIndicator.tsx`
-**Phases:** 5 (main chat flow)
 
 Delivered:
-- `Chat.tsx` — confirm TopBar + MessageList + ChatInput + BottomNav layout is correct and full-height on mobile
-- `MessageList.tsx` — welcome state with ExamplePrompts when empty (FR-005), auto-scroll to bottom on new messages, LoadingIndicator at bottom while isLoading
-- `ChatInput.tsx` — textarea send on Enter (Shift+Enter for newline), disabled while loading or empty, auto-focus on mount, iOS visual viewport resize handling for keyboard push
-- `ExamplePrompts.tsx` — 3 to 4 tap-to-send example prompts styled as pill chips (FR-005)
-- `LoadingIndicator.tsx` — animated indicator with contextual copy like "Finding trips for you..." (FR-021)
-- `MessageBubble.tsx` — already complete; review conflict/no-results hints (FR-013, FR-014)
-
-Note: `DestinationCard` rendering inside `MessageBubble` is Track C's responsibility.
+- `Chat.tsx` — TopBar + MessageList + ChatInput + BottomNav layout, full-height on mobile
+- `MessageList.tsx` — welcome state with ExamplePrompts when empty (FR-005), auto-scroll, LoadingIndicator while isLoading
+- `ChatInput.tsx` — Enter to send, Shift+Enter for newline, disabled while loading, iOS keyboard offset handling
+- `ExamplePrompts.tsx` — 3 to 4 tap-to-send example prompts as pill chips (FR-005)
+- `LoadingIndicator.tsx` — animated indicator with contextual copy (FR-021)
 
 ---
 
 ### Track C — Destination Cards + Booking + Price Alerts ✅ MERGED TO `main`
 **Files:** `src/components/chat/DestinationCard.tsx`, `src/components/chat/ExpandedFlightDetail.tsx`, `src/pages/Booking.tsx`
-**Phases:** 6 + 7 + 8
 
-Deliverables:
-- `DestinationCard.tsx` — full card: city, country, fare (USD), dates, flight duration, stops, "Why this matches" (FR-023), Best Value badge (FR-025), trade-off line (FR-024), "Notify Me if Price Drops" (FR-038); resolves cheapest flight for `price_alerts.flight_id` when present
-- `ExpandedFlightDetail.tsx` — expand in-card panel: departure/return times (demo clocks from dates), stops, aircraft type, fare class from DB row, "Book This Trip" to `/booking/:flightId` with query params (FR-019)
-- `Booking.tsx` — fare class selector, passenger count fixed at 1, Confirm Booking fake success + toast, "Back to your trip planner" link (FR-034 to FR-037)
-- Price alerts: `setPriceAlert` inserts `price_alerts` with `expires_at` +90 days and `toast.success` (FR-038 to FR-040); helpers in `src/lib/api.ts`: `getCheapestFlightForDestination`, `getDestinationById`
+Delivered:
+- `DestinationCard.tsx` — city, country, fare, dates, duration, stops, "Why this matches" (FR-023), Best Value badge (FR-025), trade-off line (FR-024), "Notify Me if Price Drops" (FR-038)
+- `ExpandedFlightDetail.tsx` — departure/return times, stops, aircraft type, fare class, "Book This Trip" → `/booking/:flightId` (FR-019)
+- `Booking.tsx` — fare class selector, Confirm Booking fake success + toast, "Back to your trip planner" link (FR-034 to FR-037)
+- Price alerts: inserts `price_alerts` with `expires_at` +90 days, `toast.success` confirmation (FR-038 to FR-040)
+
+---
+
+## Remaining: Phase 9 — Polish and Demo Prep
+
+- [ ] End-to-end test on real phone (iPhone 14 viewport, 390px)
+- [ ] Warm Edge Function before demo (avoids cold start on first message)
+- [ ] Demo script: 4 to 5 talking points mapped to specific clicks
+- [ ] Deploy to public Vercel URL (set VITE_* env vars in Vercel project settings)
+- [ ] Record short video tour (assignment deliverable)
 
 ---
 
@@ -76,11 +75,11 @@ Deliverables:
 - **2026-04-27:** Frontend premium quality pass on `main`: improved visual hierarchy across TopBar, BottomNav, MessageList, MessageBubble, DestinationCard, ExpandedFlightDetail, and Booking surfaces.
 - **2026-04-27:** Added `/alerts` page and route so BottomNav "Alerts" no longer routes to a missing page.
 - **2026-04-27:** Updated example prompt copy to remove em dash usage in UI strings.
-- **2026-04-27:** Track C merged to `main` from `frontend-track-c` (booking route `/booking/:flightId`, expanded detail from seeded flights, price alerts with optional `flight_id`).
-- **2026-04-27:** Frontend Track B merged into `main` (`frontend-track-b` -> `main`). Chat core mobile UX improvements shipped: prompt chips, loading indicator rotation, iOS keyboard offset handling, and message list layout fixes.
-- **2026-04-27:** Track A complete and merged to `main`. Home screen, `design.md`, `index.css` reset all shipped.
+- **2026-04-27:** Track C merged to `main` from `frontend-track-c` (booking route, expanded detail, price alerts).
+- **2026-04-27:** Frontend Track B merged into `main`. Chat core mobile UX shipped.
+- **2026-04-27:** Track A complete and merged to `main`. Home screen, `design.md`, `index.css` reset shipped.
+- **2026-04-27:** Switched LLM from Gemini Flash to OpenAI gpt-4o-mini (Gemini quota=0). OPENAI_API_KEY set in Supabase Vault. Edge Function redeployed as v12. End-to-end smoke test passed.
 - **2026-04-27:** Backend (Dhruv): schema migration and seed applied (25 destinations, 70 flights). Edge Function deployed and ACTIVE. `.env.example` updated with real Supabase values.
-- **2026-04-27:** `frontend` branch created. 3-track parallel build structure established.
 - **2026-04-27:** Memory Bank added to GitHub repo at `memory-bank/`.
 - **2026-04-27:** Team split established: Dhruv owns `supabase/`, frontend team owns `src/pages/` and `src/components/`.
 
@@ -94,15 +93,15 @@ Deliverables:
 
 These are settled. Do not relitigate without explicit input.
 
-- **Tech stack:** React + Vite + TypeScript on the frontend, Tailwind CSS for styling, Supabase for the entire backend (Postgres, Edge Functions, Auth). LLM is Anthropic Claude API called from a Supabase Edge Function.
+- **Tech stack:** React + Vite + TypeScript on the frontend, Tailwind CSS for styling, Supabase for the entire backend (Postgres, Edge Functions, Auth). LLM is OpenAI gpt-4o-mini called from a Supabase Edge Function.
 - **Mobile-first web app**, not a native app. Should look and feel like the United mobile app when viewed in a phone-sized viewport. Desktop is a secondary consideration but should not be broken.
 - **Hardcoded demo user**, not real auth. A single seeded MileagePlus profile (Premier Gold tier, EWR home airport, sample preferences and travel history) drives all personalization.
 - **Cash bookings only**, no miles+cash UI in the prototype (matches PRD §7.2 v1 scope).
 - **Seeded fake inventory**, not real flight data. The Supabase `destinations` and `flights` tables hold 25 destinations with believable round-trip fares from EWR.
-- **Claude is the entire AI layer.** No fine-tuning, no RAG over external sources. The Edge Function passes the user profile and the relevant slice of seeded inventory directly into the system prompt so Claude returns grounded results.
-- **Structured JSON output from Claude**, not free-form text. The Edge Function instructs Claude to return a strict JSON shape (see `systemPatterns.md`) so the frontend can render destination cards reliably.
+- **OpenAI gpt-4o-mini is the AI layer.** No fine-tuning, no RAG over external sources. The Edge Function passes the user profile and the relevant slice of seeded inventory directly into the system prompt so the model returns grounded results.
+- **Structured JSON output**, not free-form text. The Edge Function instructs the model to return a strict JSON shape (see `systemPatterns.md`) so the frontend can render destination cards reliably.
 - **Conversation history is persisted** in Supabase (`conversations`, `messages` tables) so refinement turns work and so the demo can be replayed.
-- **Postgres over DynamoDB** for the conversation store. Architecture doc §2 specifies this for richer query support; we keep that decision in the prototype since Supabase is Postgres-native anyway.
+- **Postgres over DynamoDB** for the conversation store.
 
 ## Active Design Considerations
 
