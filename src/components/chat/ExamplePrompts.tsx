@@ -13,12 +13,12 @@ const PROMPTS = [
 
 export function ExamplePrompts({ onSelect }: Props) {
   return (
-    <div className="px-4 py-2 flex flex-col gap-2">
+    <div className="py-2 flex flex-wrap gap-2">
       {PROMPTS.map((p) => (
         <button
           key={p}
           onClick={() => onSelect(p)}
-          className="text-left text-sm text-[#003087] border border-[#003087]/30 rounded-xl px-4 py-3 bg-white hover:bg-[#003087]/5 active:bg-[#003087]/10 transition-colors"
+          className="text-left text-sm text-[#003087] border border-[#003087]/30 rounded-full px-4 py-2 bg-white hover:bg-[#003087]/5 active:bg-[#003087]/10 transition-colors"
         >
           {p}
         </button>
