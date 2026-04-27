@@ -2,21 +2,60 @@
 
 ## Current Focus
 
-**Backend setup via Supabase MCP.** Frontend scaffolding is complete and pushed to GitHub. The immediate goal is to get the Supabase project fully configured (schema, seed data, Edge Function deployed, secrets set) so the frontend team can connect and see real Claude responses.
+**Frontend implementation underway — parallel 3-track build on the `frontend` branch.**
+Backend (Dhruv) is completing Supabase setup in parallel; frontend tracks can be built and previewed with mock data until the Edge Function is live.
 
 GitHub repo: https://github.com/dg3496/united-trip-planner
+Active branch: `frontend`
 Supabase project ref: jexqrbxpgxnmwxgkyinn
 
-Next actions (in order):
-1. Apply schema migration via MCP (001_schema.sql)
-2. Seed demo user + destinations + flights (002_seed.sql)
-3. Set ANTHROPIC_API_KEY secret
-4. Deploy chat-trip-planner Edge Function
-5. Get project URL + anon key for .env.local
-6. Smoke test the full flow
+## Frontend Team Split (3 Parallel Tracks)
+
+All three tracks work off the `frontend` branch. Each person should commit to their own sub-branch (`frontend-track-a`, `frontend-track-b`, `frontend-track-c`) and open a PR into `frontend` when done. Merge order: B first (chat core), then A and C can merge in either order, then `frontend` → `main`.
+
+---
+
+### Track A — Home Screen + Polish + Deploy
+**Files:** `src/pages/Home.tsx`, `src/index.css`, `src/App.css`, Vercel deploy config
+**Phases:** 4 + 9
+
+Deliverables:
+- Full United-branded home screen: TopBar with United wordmark, hero/banner area with "Not sure where to go?" CTA (FR-001, FR-003), BottomNav wired (FR-002)
+- Tapping the banner calls `useChatStore().resetConversation()` then navigates to `/chat`
+- Phase 9 polish: smooth page transitions, copy review (no em dashes), navy/white color palette consistent throughout, mobile Safari fixed-bottom bar tested
+- Vercel deploy: set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_DEMO_USER_ID` env vars and confirm public URL works on iPhone 14 viewport (390px)
+
+---
+
+### Track B — Chat UI Core
+**Files:** `src/pages/Chat.tsx`, `src/components/chat/MessageList.tsx`, `src/components/chat/ChatInput.tsx`, `src/components/chat/ExamplePrompts.tsx`, `src/components/chat/LoadingIndicator.tsx`
+**Phases:** 5 (main chat flow)
+
+Deliverables:
+- `Chat.tsx` — already wired to store; confirm TopBar + MessageList + ChatInput + BottomNav layout is correct and full-height on mobile
+- `MessageList.tsx` — welcome state with ExamplePrompts when empty (FR-005), auto-scroll to bottom on new messages, LoadingIndicator at bottom while isLoading
+- `ChatInput.tsx` — textarea send on Enter (Shift+Enter for newline), disabled while loading or empty, auto-focus on mount, iOS visual viewport resize handling for keyboard push
+- `ExamplePrompts.tsx` — 3 to 4 tap-to-send example prompts styled as pill chips (FR-005)
+- `LoadingIndicator.tsx` — animated indicator with contextual copy like "Finding trips for you..." (FR-021)
+- `MessageBubble.tsx` — already looks complete; review and confirm conflict/no-results hints render correctly (FR-013, FR-014)
+
+Note: `DestinationCard` rendering inside `MessageBubble` is Track C's responsibility. Track B should render the card area as a placeholder div if Track C is not merged yet.
+
+---
+
+### Track C — Destination Cards + Booking + Price Alerts
+**Files:** `src/components/chat/DestinationCard.tsx`, `src/components/chat/ExpandedFlightDetail.tsx`, `src/pages/Booking.tsx`
+**Phases:** 6 + 7 + 8
+
+Deliverables:
+- `DestinationCard.tsx` — full card: city, country, fare (USD), dates, flight duration, stops, "Why this matches" line (FR-023), Best Value badge (FR-025), trade-off line if present (FR-024), "Notify Me if Price Drops" button (FR-038)
+- `ExpandedFlightDetail.tsx` — tap card to expand modal/sheet: departure/return times, stops, aircraft type, fare class, "Book This Trip" CTA that navigates to `/booking` with URL params (FR-019)
+- `Booking.tsx` — already has skeleton; fill in: fare class selector, passenger count (fixed at 1 for demo), Confirm Booking fake success state with toast, "Back to your trip planner" link (FR-034 to FR-037)
+- Price alerts: "Notify Me if Price Drops" calls `supabase.from('price_alerts').insert(...)` with `expires_at = now + 90 days`, then shows a `toast.success("We'll let you know if the price drops")` (FR-038 to FR-040)
 
 ## Recent Changes
 
+- **2026-04-27:** `frontend` branch created. Frontend build divided into 3 parallel tracks (A: Home+Polish, B: Chat UI core, C: Cards+Booking+Alerts). See track definitions above.
 - **2026-04-27:** Full project scaffolded and pushed to GitHub (see progress.md for full list).
 - **2026-04-27:** Supabase MCP server connected and authenticated (project ref: jexqrbxpgxnmwxgkyinn).
 - **2026-04-27:** Memory Bank added to GitHub repo at memory-bank/ and will be updated after every significant change.
