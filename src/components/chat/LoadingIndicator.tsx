@@ -1,4 +1,6 @@
-// FR-021 — contextual loading text while Edge Function is in flight
+import { useEffect, useState } from 'react'
+
+// FR-021 - contextual loading text while Edge Function is in flight
 
 const MESSAGES = [
   'Searching destinations for you...',
@@ -8,8 +10,14 @@ const MESSAGES = [
 ]
 
 export function LoadingIndicator() {
-  // Rotate through messages every 2s. Simple index derived from Date.
-  const idx = Math.floor(Date.now() / 2000) % MESSAGES.length
+  const [idx, setIdx] = useState(0)
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setIdx((prev) => (prev + 1) % MESSAGES.length)
+    }, 2000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   return (
     <div className="flex items-start gap-3 px-4 py-2">

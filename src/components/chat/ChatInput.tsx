@@ -6,7 +6,7 @@
 // Keyboard/mobile note: on iOS, a fixed bottom bar shifts up with the software keyboard.
 // Test on iPhone viewport and handle via visualViewport resize if needed.
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
 import { Send } from 'lucide-react'
 
 interface Props {
@@ -16,10 +16,30 @@ interface Props {
 
 export function ChatInput({ onSend, isLoading }: Props) {
   const [value, setValue] = useState('')
+  const [keyboardOffset, setKeyboardOffset] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     textareaRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    const viewport = window.visualViewport
+    if (!viewport) return
+
+    const updateOffset = () => {
+      const offset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+      setKeyboardOffset(offset)
+    }
+
+    updateOffset()
+    viewport.addEventListener('resize', updateOffset)
+    viewport.addEventListener('scroll', updateOffset)
+
+    return () => {
+      viewport.removeEventListener('resize', updateOffset)
+      viewport.removeEventListener('scroll', updateOffset)
+    }
   }, [])
 
   function handleSend() {
@@ -31,7 +51,7 @@ export function ChatInput({ onSend, isLoading }: Props) {
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
+  function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
@@ -48,7 +68,10 @@ export function ChatInput({ onSend, isLoading }: Props) {
   const canSend = value.trim().length > 0 && !isLoading
 
   return (
-    <div className="border-t border-gray-100 bg-white px-4 py-3 flex items-end gap-3 flex-shrink-0 pb-safe">
+    <div
+      className="border-t border-gray-100 bg-white px-4 py-3 flex items-end gap-3 flex-shrink-0 pb-safe"
+      style={{ marginBottom: keyboardOffset }}
+    >
       <textarea
         ref={textareaRef}
         value={value}
