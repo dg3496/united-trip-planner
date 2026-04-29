@@ -11,6 +11,7 @@ const FEATURED = [
     tag: 'Beach',
     tagColor: '#0ea5e9',
     image: 'https://images.unsplash.com/photo-1510097467424-192d713fd8b2?w=400',
+    query: 'Show me beach trips to Cancun in May under $500',
   },
   {
     city: 'Lisbon',
@@ -18,6 +19,7 @@ const FEATURED = [
     tag: 'Culture',
     tagColor: '#8b5cf6',
     image: 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=400',
+    query: 'Cultural trip to Lisbon in June under $800',
   },
   {
     city: 'Honolulu',
@@ -25,6 +27,7 @@ const FEATURED = [
     tag: 'Tropical',
     tagColor: '#10b981',
     image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400',
+    query: 'Tropical getaway to Honolulu in May',
   },
   {
     city: 'Tokyo',
@@ -32,6 +35,7 @@ const FEATURED = [
     tag: 'Adventure',
     tagColor: '#f59e0b',
     image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400',
+    query: 'Adventure trip to Tokyo in June',
   },
 ]
 
@@ -43,6 +47,11 @@ export default function Home() {
   function startNewTrip() {
     resetConversation()
     navigate('/chat')
+  }
+
+  function startWithQuery(query: string) {
+    resetConversation()
+    navigate(`/chat?q=${encodeURIComponent(query)}`)
   }
 
   return (
@@ -106,7 +115,7 @@ export default function Home() {
             {FEATURED.map((dest) => (
               <button
                 key={dest.city}
-                onClick={startNewTrip}
+                onClick={() => startWithQuery(dest.query)}
                 className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-[0_2px_12px_rgba(15,23,42,0.06)] flex items-center gap-0 text-left active:scale-[0.98] transition-transform w-full"
               >
                 {/* Thumbnail */}
@@ -132,13 +141,6 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Explore CTA */}
-          <button
-            onClick={startNewTrip}
-            className="w-full py-3.5 rounded-2xl border-2 border-[#003087]/20 text-[#003087] text-sm font-bold active:bg-[#003087]/5 transition-colors"
-          >
-            Explore all destinations with AI →
-          </button>
         </div>
       </main>
 

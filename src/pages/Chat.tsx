@@ -5,7 +5,8 @@
 // Pull state from useChatStore()
 // Handle error toasts when store.error is set
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { TopBar } from '../components/layout/TopBar'
 import { BottomNav } from '../components/layout/BottomNav'
@@ -15,6 +16,18 @@ import { useChatStore } from '../store/chatStore'
 
 export default function Chat() {
   const { messages, isLoading, error, conversationId, sendMessage, clearError } = useChatStore()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const autoSentRef = useRef(false)
+
+  // Auto-send a pre-written query passed via ?q= (e.g. from Home featured tiles)
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (q && !autoSentRef.current && messages.length === 0) {
+      autoSentRef.current = true
+      setSearchParams({}, { replace: true }) // clean the URL
+      sendMessage(q)
+    }
+  }, [])
 
   useEffect(() => {
     if (error) {

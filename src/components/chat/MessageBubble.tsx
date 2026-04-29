@@ -22,7 +22,7 @@ export function MessageBubble({ message, conversationId, onSuggestionSelect }: P
       {/* Message bubble */}
       <div className={`max-w-[85%] flex items-start gap-2.5 ${isUser ? 'justify-end' : ''}`}>
         {!isUser && (
-          <div className="w-7 h-7 rounded-full bg-[#003087] text-white text-xs font-bold flex items-center justify-center mt-1 shadow-sm">
+          <div className="w-7 h-7 rounded-full bg-[#003087] text-white text-xs font-bold flex items-center justify-center mt-1 shadow-sm flex-shrink-0">
             U
           </div>
         )}
