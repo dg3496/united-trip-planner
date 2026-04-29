@@ -10,16 +10,35 @@
     --united-light: #F5F7FA;
   }
 
+  /* ─── Viewport lock ────────────────────────────────────────────────────────
+     Forces html/body/#root to fill exactly the visible viewport and prevents
+     the document itself from scrolling. Only explicit overflow-y-auto
+     containers (like <main>) scroll internally. Without this, h-full chains
+     in MobileShell → Page → TopBar/BottomNav can't resolve to a fixed height,
+     causing bars to scroll out of view on mobile.
+  ──────────────────────────────────────────────────────────────────────────── */
   html {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
   }
 
   body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
     @apply bg-[#F5F7FA] text-gray-900 antialiased;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
   * {
+    box-sizing: border-box;
     -webkit-font-smoothing: antialiased;
   }
 }
