@@ -59,7 +59,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#F0F4FA]">
+    <div className="flex flex-col h-full min-h-0 bg-[#F0F4FA]">
       <TopBar />
 
       <main className="flex-1 overflow-y-auto">

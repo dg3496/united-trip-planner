@@ -130,7 +130,7 @@ export function ExpandedFlightDetail({ suggestion, conversationId }: Props) {
 
       <div className="text-xs">
         <p className="text-gray-400 uppercase tracking-wide text-[10px] mb-0.5">Total fare (from)</p>
-        <p className="font-bold text-[#003087] text-sm">${flight.fare_usd} USD round trip</p>
+        <p className="font-bold text-[#003087] text-sm">${suggestion.lowestFareUsd} USD round trip</p>
       </div>
 
       <button

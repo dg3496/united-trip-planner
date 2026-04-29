@@ -10,7 +10,10 @@ export function TopBar({ title, showBack = false }: Props) {
   const navigate = useNavigate()
 
   return (
-    <div className="bg-gradient-to-r from-[#002B7F] to-[#003FA3] text-white flex items-center h-14 px-4 flex-shrink-0 pt-safe border-b border-white/10 shadow-[0_6px_24px_rgba(0,48,135,0.22)]">
+    <div
+      className="bg-gradient-to-r from-[#002B7F] to-[#003FA3] text-white flex items-center min-h-14 px-4 flex-shrink-0 border-b border-white/10 shadow-[0_6px_24px_rgba(0,48,135,0.22)]"
+      style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 0px)' }}
+    >
 
       {/* Left: optional back + United wordmark always visible */}
       <div className="flex items-center gap-2">

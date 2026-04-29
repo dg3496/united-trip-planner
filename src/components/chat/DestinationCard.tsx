@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { Clock, Plane, Star, ChevronDown, ChevronUp } from 'lucide-react'
+import { Clock, Plane, Star, ChevronDown, ChevronUp, Bell, BellOff } from 'lucide-react'
+import { toast } from 'sonner'
 import type { Suggestion } from '../../lib/types'
 import { ExpandedFlightDetail } from './ExpandedFlightDetail'
+import { useAlertsStore } from '../../store/alertsStore'
 
 // Stable Unsplash images keyed by IATA code
 const DESTINATION_IMAGES: Record<string, string> = {
@@ -41,6 +43,28 @@ interface Props {
 
 export function DestinationCard({ suggestion, conversationId }: Props) {
   const [expanded, setExpanded] = useState(false)
+  const { addAlert, removeAlert, hasAlert, alerts } = useAlertsStore()
+  const alerted = hasAlert(suggestion.destinationId)
+
+  function toggleAlert(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (alerted) {
+      const existing = alerts.find((a) => a.destinationId === suggestion.destinationId)
+      if (existing) removeAlert(existing.id)
+      toast(`Alert removed for ${suggestion.city}`)
+    } else {
+      addAlert({
+        destinationId: suggestion.destinationId,
+        city: suggestion.city,
+        country: suggestion.country,
+        fareUsd: suggestion.lowestFareUsd,
+        outboundDate: suggestion.outboundDate,
+        returnDate: suggestion.returnDate,
+        stops: suggestion.stops,
+      })
+      toast.success(`Price alert set for ${suggestion.city} — we'll notify you if fares drop below $${suggestion.lowestFareUsd}.`)
+    }
+  }
 
   const durationHours = Math.floor(suggestion.flightDurationMinutes / 60)
   const durationMins = suggestion.flightDurationMinutes % 60
@@ -113,15 +137,31 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
           </div>
         )}
 
-        {/* Expand toggle */}
-        <div className="border-t border-slate-100 -mx-4 px-4 pt-2.5">
+        {/* Footer: expand toggle + bell alert */}
+        <div className="border-t border-slate-100 -mx-4 px-4 pt-2.5 flex items-center gap-2">
           <button
             onClick={() => setExpanded(!expanded)}
-            className="w-full flex items-center justify-center gap-1.5 text-[13px] text-[#003087] font-semibold py-1 active:opacity-70 transition-opacity"
+            className="flex-1 flex items-center justify-center gap-1.5 text-[13px] text-[#003087] font-semibold py-1 active:opacity-70 transition-opacity"
           >
             {expanded
-              ? <><ChevronUp size={14} strokeWidth={2.5} /> Hide flight details</>
-              : <><ChevronDown size={14} strokeWidth={2.5} /> Show flight details</>
+              ? <><ChevronUp size={14} strokeWidth={2.5} /> Hide details</>
+              : <><ChevronDown size={14} strokeWidth={2.5} /> Show details</>
+            }
+          </button>
+
+          {/* One-tap price alert bell */}
+          <button
+            onClick={toggleAlert}
+            title={alerted ? 'Remove price alert' : 'Set price alert'}
+            className={`flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-full transition-colors ${
+              alerted
+                ? 'bg-[#003087] text-white'
+                : 'border border-[#003087]/30 text-[#003087] bg-transparent active:bg-[#003087]/10'
+            }`}
+          >
+            {alerted
+              ? <><BellOff size={11} strokeWidth={2.5} /> Alerted</>
+              : <><Bell size={11} strokeWidth={2.5} /> Alert me</>
             }
           </button>
         </div>

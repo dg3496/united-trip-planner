@@ -5,15 +5,25 @@
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  height: 100%;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #e5e7eb;
+  /* Lock the document — only the explicit <main> inside the app scrolls.
+     Prevents iOS/Android Safari from auto-hiding their address bars when
+     the document scrolls (which was hiding our TopBar/BottomNav). */
+  overflow: hidden;
+  overscroll-behavior: none;
+  position: fixed;
+  inset: 0;
 }
 
 #root {
-  width: 100%;
-  min-height: 100svh;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
 }
 
 /* Safe area insets for iPhone notch / home indicator */

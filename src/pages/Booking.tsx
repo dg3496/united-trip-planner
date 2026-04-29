@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { TopBar } from '../components/layout/TopBar'
+import { BottomNav } from '../components/layout/BottomNav'
 import { getDestinationById, getFlightById } from '../lib/api'
 import type { DbFlight } from '../lib/types'
 
@@ -64,33 +65,35 @@ export default function Booking() {
 
   if (!flightId) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0">
         <TopBar title="Confirm Booking" showBack />
-        <div className="p-6 text-sm text-gray-600">Missing flight. Return to the trip planner and pick a trip.</div>
+        <div className="flex-1 p-6 text-sm text-gray-600">Missing flight. Return to the trip planner and pick a trip.</div>
+        <BottomNav />
       </div>
     )
   }
 
   if (!loading && !flight) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0">
         <TopBar title="Confirm Booking" showBack />
-        <div className="p-6 text-sm text-gray-600">
-          We could not load this flight. Check your connection or try another option.
+        <div className="flex-1 p-6 flex flex-col gap-3 text-sm text-gray-600">
+          <p>We could not load this flight. Check your connection or try another option.</p>
+          <button
+            type="button"
+            onClick={() => navigate('/chat')}
+            className="text-sm text-[#003087] underline text-left"
+          >
+            Back to your trip planner
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate('/chat')}
-          className="mx-6 text-sm text-[#003087] underline text-left"
-        >
-          Back to your trip planner
-        </button>
+        <BottomNav />
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-slate-50 to-white">
+    <div className="flex flex-col h-full min-h-0 bg-gradient-to-b from-slate-50 to-white">
       <TopBar title="Confirm Booking" showBack />
       <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
         {loading ? (
@@ -169,6 +172,7 @@ export default function Booking() {
           </>
         )}
       </div>
+      <BottomNav />
     </div>
   )
 }
