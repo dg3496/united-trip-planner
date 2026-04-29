@@ -8,6 +8,14 @@ const corsHeaders = {
 
 type ResponseType = 'suggestions' | 'clarifying_question' | 'no_results' | 'conflict'
 
+// Month name → YYYY-MM for 2026
+const MONTH_MAP: Record<string, string> = {
+  january: '2026-01', february: '2026-02', march: '2026-03',
+  april: '2026-04', may: '2026-05', june: '2026-06',
+  july: '2026-07', august: '2026-08', september: '2026-09',
+  october: '2026-10', november: '2026-11', december: '2026-12',
+}
+
 interface Suggestion {
   destinationId: string
   city: string
@@ -65,10 +73,11 @@ type FlightOption = {
  * Detect hard constraints from the full conversation text.
  * Returns structured filters we apply server-side.
  */
-function detectConstraints(conversationText: string): {
+function detectConstraints(conversationText: string, today: string): {
   stopsFilter: number | null  // 0 = nonstop only, 1 = one-stop only, null = no filter
   maxFare: number | null
-  monthFilter: string | null   // e.g. "2026-05"
+  monthFilter: string | null   // e.g. "2026-05", null if no month or month is past
+  requestedPastMonth: string | null  // e.g. "March" if user asked for a past month
   tagFilters: string[]         // e.g. ["beach", "warm"]
 } {
   const text = conversationText.toLowerCase()
@@ -78,18 +87,30 @@ function detectConstraints(conversationText: string): {
   if (/\bnonstop\b|non-stop\b|direct\b/.test(text)) stopsFilter = 0
   else if (/\bone.?stop\b|1.?stop\b/.test(text)) stopsFilter = 1
 
-  // Budget: "under $X", "less than $X", "budget $X", "$X or less", "max $X"
+  // Budget: "under $X", "less than $X", "$X or less", "max $X"
+  // Clear budget if user explicitly asks to increase it in the latest part of conversation
   let maxFare: number | null = null
-  const fareMatch = text.match(/(?:under|less than|below|budget|max|maximum)[\s$]*(\d+)/)
-    ?? text.match(/\$(\d+)\s*(?:or less|max|budget|round.?trip)?/)
-  if (fareMatch) maxFare = parseInt(fareMatch[1], 10)
+  const increaseBudget = /increase.{0,20}budget|bump.{0,20}budget|raise.{0,20}budget|higher budget|more budget|expand budget|budget.{0,10}higher|budget.{0,10}more/.test(text)
+  if (!increaseBudget) {
+    const fareMatch = text.match(/(?:under|less than|below|max|maximum)[\s$]*(\d+)/)
+      ?? text.match(/\$(\d+)\s*(?:or less|max|budget|round.?trip)?/)
+    if (fareMatch) maxFare = parseInt(fareMatch[1], 10)
+  }
 
-  // Month filter
+  // Month filter — detect all 12 months; skip filter if month is in the past
   let monthFilter: string | null = null
-  if (/\bmay\b/.test(text)) monthFilter = '2026-05'
-  else if (/\bjune\b/.test(text)) monthFilter = '2026-06'
-  else if (/\bjuly\b/.test(text)) monthFilter = '2026-07'
-  else if (/\baugust\b/.test(text)) monthFilter = '2026-08'
+  let requestedPastMonth: string | null = null
+  const currentMonth = today.slice(0, 7) // e.g. "2026-04"
+  for (const [name, ym] of Object.entries(MONTH_MAP)) {
+    if (new RegExp(`\\b${name}\\b`).test(text)) {
+      if (ym >= currentMonth) {
+        monthFilter = ym
+      } else {
+        requestedPastMonth = name.charAt(0).toUpperCase() + name.slice(1)
+      }
+      break
+    }
+  }
 
   // Tag filters
   const tagFilters: string[] = []
@@ -100,7 +121,7 @@ function detectConstraints(conversationText: string): {
   if (/\bluxury\b|upscale/.test(text)) tagFilters.push('luxury')
   if (/\bcultur|historic|museum/.test(text)) tagFilters.push('cultural')
 
-  return { stopsFilter, maxFare, monthFilter, tagFilters }
+  return { stopsFilter, maxFare, monthFilter, requestedPastMonth, tagFilters }
 }
 
 /**
@@ -152,6 +173,7 @@ function buildFilteredOptions(
   if (constraints.monthFilter !== null) {
     options = options.filter(o => o.month === constraints.monthFilter)
   }
+  // Note: requestedPastMonth is informational only — no filter applied
   for (const tag of constraints.tagFilters) {
     options = options.filter(o => o.dest.tags.includes(tag))
   }
@@ -187,6 +209,10 @@ function buildSystemPrompt(
   if (constraints.monthFilter) activeFilters.push(`month: ${constraints.monthFilter}`)
   if (constraints.tagFilters.length > 0) activeFilters.push(`tags: ${constraints.tagFilters.join(', ')}`)
 
+  const pastMonthNote = constraints.requestedPastMonth
+    ? `NOTE: The user mentioned ${constraints.requestedPastMonth}, which is already in the past. No ${constraints.requestedPastMonth} flights exist. Show the best available upcoming options instead and briefly acknowledge the date shift in assistantMessage.`
+    : ''
+
   const destDescriptions = destinations.map(d => `${d.id} (${d.city}): ${d.description}`).join('\n')
 
   return `You are the United Airlines AI Trip Planner. Help travelers discover destinations.
@@ -194,6 +220,7 @@ function buildSystemPrompt(
 TODAY'S DATE: ${today}
 
 ACTIVE FILTERS (already applied server-side): ${activeFilters.length > 0 ? activeFilters.join(', ') : 'none'}
+${pastMonthNote ? `\n${pastMonthNote}` : ''}
 
 PRE-FILTERED FLIGHT OPTIONS (id|city|country|stops|fare|duration|dates):
 ${table}
@@ -383,7 +410,7 @@ serve(async (req) => {
     const conversationText = `${historyText} ${messageText}`.trim()
 
     const today = new Date().toISOString().slice(0, 10)
-    const constraints = detectConstraints(conversationText)
+    const constraints = detectConstraints(conversationText, today)
     const options = buildFilteredOptions(
       (destinations ?? []) as unknown as DbDestination[],
       (flights ?? []) as unknown as DbFlight[],
