@@ -11,23 +11,36 @@ export function TopBar({ title, showBack = false }: Props) {
 
   return (
     <div className="bg-gradient-to-r from-[#002B7F] to-[#003FA3] text-white flex items-center h-14 px-4 flex-shrink-0 pt-safe border-b border-white/10 shadow-[0_6px_24px_rgba(0,48,135,0.22)]">
-      {showBack && (
-        <button
-          onClick={() => navigate(-1)}
-          className="mr-3 p-1 rounded-full hover:bg-white/10 active:bg-white/20 transition-colors"
-          aria-label="Go back"
-        >
-          <ArrowLeft size={22} />
-        </button>
-      )}
 
-      {/* United wordmark — inline SVG for no external dependency */}
-      {!title && !showBack && (
-        <span className="text-xl font-bold tracking-wide">United</span>
-      )}
+      {/* Left: optional back + United wordmark always visible */}
+      <div className="flex items-center gap-2">
+        {showBack && (
+          <button
+            onClick={() => navigate(-1)}
+            className="p-1 -ml-1 rounded-full hover:bg-white/10 active:bg-white/20 transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft size={20} />
+          </button>
+        )}
 
+        {/* Globe icon */}
+        <div className="w-7 h-7 rounded-full bg-white/20 border border-white/30 flex items-center justify-center flex-shrink-0">
+          <span className="text-white text-[13px] font-black leading-none">U</span>
+        </div>
+
+        {/* Wordmark */}
+        <span className="text-[15px] font-black tracking-[0.1em] uppercase leading-none">
+          United
+        </span>
+      </div>
+
+      {/* Right: page-level context label */}
       {title && (
-        <span className="text-base font-semibold">{title}</span>
+        <div className="ml-auto flex items-center">
+          <div className="h-4 w-px bg-white/25 mr-3" />
+          <span className="text-[13px] font-medium text-white/75 tracking-wide">{title}</span>
+        </div>
       )}
     </div>
   )

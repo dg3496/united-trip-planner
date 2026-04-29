@@ -18,6 +18,7 @@ export interface Suggestion {
   returnDate: string
   flightDurationMinutes: number
   stops: number
+  isAlternative?: boolean    // true when this suggestion doesn't meet all strict constraints
 }
 
 export interface TripPlannerResponse {
