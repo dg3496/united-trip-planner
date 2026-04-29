@@ -3,8 +3,7 @@ import { Clock, Plane, Star, ChevronDown, ChevronUp } from 'lucide-react'
 import type { Suggestion } from '../../lib/types'
 import { ExpandedFlightDetail } from './ExpandedFlightDetail'
 
-// Static Unsplash photo map keyed by IATA destination id.
-// Using images.unsplash.com (stable) instead of source.unsplash.com (deprecated).
+// Stable Unsplash images keyed by IATA code
 const DESTINATION_IMAGES: Record<string, string> = {
   AMS: 'https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=800',
   ANC: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=800',
@@ -15,7 +14,7 @@ const DESTINATION_IMAGES: Record<string, string> = {
   DEN: 'https://images.unsplash.com/photo-1546156929-a4c0ac411f47?w=800',
   DUB: 'https://images.unsplash.com/photo-1564959130747-897fb406b9af?w=800',
   FCO: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800',
-  FLL: 'https://images.unsplash.com/photo-1533587851505-d119e13fa0d7?w=800',
+  FLL: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
   GRU: 'https://images.unsplash.com/photo-1587282045344-4f6e222ad81f?w=800',
   HNL: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
   ICN: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?w=800',
@@ -32,7 +31,7 @@ const DESTINATION_IMAGES: Record<string, string> = {
   PUJ: 'https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=800',
   SAN: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=800',
   SEA: 'https://images.unsplash.com/photo-1502175353174-a7a70e73b362?w=800',
-  SJU: 'https://images.unsplash.com/photo-1619546952812-520e98064a52?w=800',
+  SJU: 'https://images.unsplash.com/photo-1580237541049-2d715a09486e?w=800',
 }
 
 interface Props {
@@ -46,80 +45,82 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
   const durationHours = Math.floor(suggestion.flightDurationMinutes / 60)
   const durationMins = suggestion.flightDurationMinutes % 60
 
+  const outDate = new Date(suggestion.outboundDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const retDate = new Date(suggestion.returnDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
   return (
-    <div className="bg-white rounded-2xl shadow-[0_10px_28px_rgba(15,23,42,0.08)] border border-slate-200/80 overflow-hidden">
-      {/* Header image area */}
-      <div className="relative h-32 bg-gradient-to-br from-[#003087] to-[#0056B8]">
+    <div className="bg-white rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(15,23,42,0.10)] border border-slate-100">
+
+      {/* Hero image */}
+      <div className="relative h-44 bg-gradient-to-br from-[#003087] to-[#0056B8]">
         <img
           src={DESTINATION_IMAGES[suggestion.destinationId] ?? ''}
           alt={suggestion.city}
           className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = 'none'
-          }}
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
         />
+        {/* Rich gradient for legibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+        {/* Best Value badge */}
         {suggestion.isBestValue && (
-          <span className="absolute top-3 left-3 bg-[#C8960C] text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-            <Star size={10} fill="white" /> Best Value
-          </span>
+          <div className="absolute top-3 left-3 bg-[#C8960C] text-white text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg">
+            <Star size={9} fill="white" strokeWidth={0} /> Best Value
+          </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent pointer-events-none" />
-        <div className="absolute bottom-3 left-3 text-white">
-          <p className="font-bold text-lg leading-tight drop-shadow">{suggestion.city}</p>
-          <p className="text-xs opacity-90 drop-shadow">{suggestion.country}</p>
-        </div>
-        <div className="absolute bottom-3 right-3 text-white text-right">
-          <p className="font-bold text-xl drop-shadow">${suggestion.lowestFareUsd}</p>
-          <p className="text-xs opacity-90 drop-shadow">round trip</p>
+
+        {/* City + price overlay */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 flex items-end justify-between">
+          <div>
+            <p className="text-white font-bold text-2xl leading-tight drop-shadow-sm">{suggestion.city}</p>
+            <p className="text-white/75 text-xs mt-0.5">{suggestion.country}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-white font-extrabold text-2xl leading-tight drop-shadow-sm">${suggestion.lowestFareUsd}</p>
+            <p className="text-white/70 text-[11px]">round trip</p>
+          </div>
         </div>
       </div>
 
       {/* Body */}
-      <div className="p-4 flex flex-col gap-3">
-        {/* Why this is the right choice — lead with the most important info */}
-        <p className="text-sm text-slate-800 leading-relaxed font-medium">{suggestion.whyThisMatches}</p>
+      <div className="px-4 pt-4 pb-3 flex flex-col gap-3">
 
-        {/* Flight meta */}
-        <div className="flex items-center gap-3 text-xs text-slate-500">
-          <span className="flex items-center gap-1">
-            <Plane size={12} />
-            {suggestion.stops === 0 ? 'Nonstop' : `${suggestion.stops} stop`}
-          </span>
-          <span className="flex items-center gap-1">
-            <Clock size={12} />
-            {durationHours}h {durationMins}m
-          </span>
-          <span className="ml-auto">
-            {new Date(suggestion.outboundDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            {' – '}
-            {new Date(suggestion.returnDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </span>
+        {/* Why this is the right choice */}
+        <p className="text-[15px] text-slate-800 leading-snug">{suggestion.whyThisMatches}</p>
+
+        {/* Flight meta row */}
+        <div className="flex items-center gap-1.5 text-[12px] text-slate-400 font-medium">
+          <Plane size={11} className="text-slate-400" />
+          <span>{suggestion.stops === 0 ? 'Nonstop' : `${suggestion.stops} stop`}</span>
+          <span className="mx-1 text-slate-300">·</span>
+          <Clock size={11} className="text-slate-400" />
+          <span>{durationHours}h {durationMins}m</span>
+          <span className="ml-auto text-slate-400 font-normal">{outDate} – {retDate}</span>
         </div>
 
-        {/* Trade-off — FR-024 */}
+        {/* Trade-off */}
         {suggestion.tradeOff && (
-          <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
-            {suggestion.tradeOff}
-          </p>
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+            <span className="text-amber-500 text-xs mt-px">⚠</span>
+            <p className="text-[12px] text-amber-700 leading-relaxed">{suggestion.tradeOff}</p>
+          </div>
         )}
 
-        {/* Expand toggle — FR-019 */}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="flex items-center justify-center gap-1 text-xs text-[#003087] font-medium py-1"
-        >
-          {expanded ? (
-            <><ChevronUp size={14} /> Hide flight details</>
-          ) : (
-            <><ChevronDown size={14} /> Show flight details</>
-          )}
-        </button>
+        {/* Expand toggle */}
+        <div className="border-t border-slate-100 -mx-4 px-4 pt-2.5">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="w-full flex items-center justify-center gap-1.5 text-[13px] text-[#003087] font-semibold py-1 active:opacity-70 transition-opacity"
+          >
+            {expanded
+              ? <><ChevronUp size={14} strokeWidth={2.5} /> Hide flight details</>
+              : <><ChevronDown size={14} strokeWidth={2.5} /> Show flight details</>
+            }
+          </button>
+        </div>
 
         {expanded && (
-          <ExpandedFlightDetail
-            suggestion={suggestion}
-            conversationId={conversationId}
-          />
+          <ExpandedFlightDetail suggestion={suggestion} conversationId={conversationId} />
         )}
       </div>
     </div>

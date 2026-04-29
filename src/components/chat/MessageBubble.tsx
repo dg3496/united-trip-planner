@@ -29,8 +29,8 @@ export function MessageBubble({ message, conversationId, onSuggestionSelect }: P
         <div
           className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
             isUser
-              ? 'bg-gradient-to-b from-[#003087] to-[#00276E] text-white rounded-tr-sm shadow-[0_8px_20px_rgba(0,48,135,0.3)]'
-              : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm'
+              ? 'bg-gradient-to-b from-[#003087] to-[#00276E] text-white rounded-tr-sm shadow-[0_6px_20px_rgba(0,48,135,0.28)]'
+              : 'bg-white border border-slate-200/80 text-slate-700 rounded-tl-sm shadow-[0_2px_12px_rgba(15,23,42,0.06)]'
           }`}
         >
           {message.content}
