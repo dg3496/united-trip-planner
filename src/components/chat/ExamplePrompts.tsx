@@ -5,9 +5,9 @@ interface Props {
 }
 
 const PROMPTS = [
-  'Beach trip under $500 in March',
+  'Beach trip under $500 in May',
   'Somewhere warm, 5 to 7 days, nonstop only',
-  'Europe for under $800 in spring',
+  'Europe for under $800 in June',
   'Surprise me, I just need a getaway',
 ]
 
