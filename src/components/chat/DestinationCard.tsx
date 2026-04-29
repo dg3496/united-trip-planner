@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { Clock, Plane, Star, Bell, ChevronDown, ChevronUp } from 'lucide-react'
-import { toast } from 'sonner'
+import { Clock, Plane, Star, ChevronDown, ChevronUp } from 'lucide-react'
 import type { Suggestion } from '../../lib/types'
-import { getCheapestFlightForDestination, setPriceAlert } from '../../lib/api'
 import { ExpandedFlightDetail } from './ExpandedFlightDetail'
 
 // Static Unsplash photo map keyed by IATA destination id.
@@ -44,22 +42,9 @@ interface Props {
 
 export function DestinationCard({ suggestion, conversationId }: Props) {
   const [expanded, setExpanded] = useState(false)
-  const [alertSet, setAlertSet] = useState(false)
-
 
   const durationHours = Math.floor(suggestion.flightDurationMinutes / 60)
   const durationMins = suggestion.flightDurationMinutes % 60
-
-  async function handlePriceAlert() {
-    try {
-      const flight = await getCheapestFlightForDestination(suggestion.destinationId)
-      await setPriceAlert(suggestion.destinationId, flight?.id ?? null, suggestion.lowestFareUsd)
-      setAlertSet(true)
-      toast.success("We'll let you know if the price drops")
-    } catch {
-      toast.error('Could not set alert. Try again.')
-    }
-  }
 
   return (
     <div className="bg-white rounded-2xl shadow-[0_10px_28px_rgba(15,23,42,0.08)] border border-slate-200/80 overflow-hidden">
@@ -91,8 +76,11 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
 
       {/* Body */}
       <div className="p-4 flex flex-col gap-3">
-        {/* Flight summary */}
-        <div className="flex items-center gap-4 text-xs text-slate-500">
+        {/* Why this is the right choice — lead with the most important info */}
+        <p className="text-sm text-slate-800 leading-relaxed font-medium">{suggestion.whyThisMatches}</p>
+
+        {/* Flight meta */}
+        <div className="flex items-center gap-3 text-xs text-slate-500">
           <span className="flex items-center gap-1">
             <Plane size={12} />
             {suggestion.stops === 0 ? 'Nonstop' : `${suggestion.stops} stop`}
@@ -101,15 +89,12 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
             <Clock size={12} />
             {durationHours}h {durationMins}m
           </span>
-          <span>
+          <span className="ml-auto">
             {new Date(suggestion.outboundDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            {' - '}
+            {' – '}
             {new Date(suggestion.returnDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
         </div>
-
-        {/* Why this matches — FR-023 */}
-        <p className="text-sm text-slate-700 leading-relaxed">{suggestion.whyThisMatches}</p>
 
         {/* Trade-off — FR-024 */}
         {suggestion.tradeOff && (
@@ -124,7 +109,7 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
           className="flex items-center justify-center gap-1 text-xs text-[#003087] font-medium py-1"
         >
           {expanded ? (
-            <><ChevronUp size={14} /> Hide details</>
+            <><ChevronUp size={14} /> Hide flight details</>
           ) : (
             <><ChevronDown size={14} /> Show flight details</>
           )}
@@ -136,22 +121,6 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
             conversationId={conversationId}
           />
         )}
-
-        {/* Actions */}
-        <div className="flex gap-2 pt-1">
-          <button
-            onClick={handlePriceAlert}
-            disabled={alertSet}
-            className={`w-full flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-2.5 rounded-xl border transition-colors ${
-              alertSet
-                ? 'border-green-200 text-green-700 bg-green-50'
-                : 'border-gray-200 text-gray-600 hover:border-[#003087]/30 hover:text-[#003087] active:bg-gray-50'
-            }`}
-          >
-            <Bell size={13} />
-            {alertSet ? 'Alert set' : 'Notify me if price drops'}
-          </button>
-        </div>
       </div>
     </div>
   )

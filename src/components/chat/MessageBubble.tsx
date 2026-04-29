@@ -18,7 +18,7 @@ export function MessageBubble({ message, conversationId, onSuggestionSelect }: P
   const meta = message.metadata
 
   return (
-    <div className={`flex flex-col gap-3 px-4 py-1 ${isUser ? 'items-end' : 'items-start'}`}>
+    <div data-role={message.role} className={`flex flex-col gap-3 px-4 py-1 ${isUser ? 'items-end' : 'items-start'}`}>
       {/* Message bubble */}
       <div className={`max-w-[85%] flex items-start gap-2.5 ${isUser ? 'justify-end' : ''}`}>
         {!isUser && (
