@@ -14,7 +14,7 @@ const DESTINATION_IMAGES: Record<string, string> = {
   DEN: 'https://images.unsplash.com/photo-1546156929-a4c0ac411f47?w=800',
   DUB: 'https://images.unsplash.com/photo-1564959130747-897fb406b9af?w=800',
   FCO: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800',
-  FLL: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+  FLL: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800',
   GRU: 'https://images.unsplash.com/photo-1587282045344-4f6e222ad81f?w=800',
   HNL: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
   ICN: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?w=800',
@@ -24,7 +24,7 @@ const DESTINATION_IMAGES: Record<string, string> = {
   LIS: 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=800',
   MBJ: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800',
   MEX: 'https://images.unsplash.com/photo-1585208798174-6cedd4ada00c?w=800',
-  MIA: 'https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=800',
+  MIA: 'https://images.unsplash.com/photo-1535498730771-e735b998cd64?w=800',
   NAS: 'https://images.unsplash.com/photo-1548574505-5e239809ee19?w=800',
   NRT: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800',
   PHX: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800',
@@ -49,7 +49,7 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
   const retDate = new Date(suggestion.returnDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
   return (
-    <div className="bg-white rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(15,23,42,0.10)] border border-slate-100">
+    <div className={`bg-white rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(15,23,42,0.10)] border ${suggestion.isAlternative ? 'border-slate-200' : 'border-slate-100'}`}>
 
       {/* Hero image */}
       <div className="relative h-44 bg-gradient-to-br from-[#003087] to-[#0056B8]">
@@ -63,9 +63,16 @@ export function DestinationCard({ suggestion, conversationId }: Props) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
         {/* Best Value badge */}
-        {suggestion.isBestValue && (
+        {suggestion.isBestValue && !suggestion.isAlternative && (
           <div className="absolute top-3 left-3 bg-[#C8960C] text-white text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg">
             <Star size={9} fill="white" strokeWidth={0} /> Best Value
+          </div>
+        )}
+
+        {/* Alternative badge */}
+        {suggestion.isAlternative && (
+          <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-1 rounded-full border border-white/40">
+            Also consider
           </div>
         )}
 

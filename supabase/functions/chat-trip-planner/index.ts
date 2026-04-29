@@ -253,6 +253,15 @@ function buildFilteredOptions(
     strictOptions = [...strictOptions, ...relaxed.slice(0, needed)]
   }
 
+  // CITY CONSTRAINT: if a city was pinned, everything else is an alternative
+  // (they may meet budget/stops, but the user asked for a specific destination)
+  if (constraints.pinnedDestination) {
+    strictOptions = strictOptions.map(o => ({
+      ...o,
+      matchType: o.dest.id === constraints.pinnedDestination ? 'strict' : 'alternative',
+    }))
+  }
+
   // ── SORT: pinned → strict → alternative → fare ───────────────────────────
   strictOptions.sort((a, b) => {
     const aPinned = constraints.pinnedDestination && a.dest.id === constraints.pinnedDestination ? -1 : 0
@@ -326,8 +335,8 @@ RULES:
 - If PRE-FILTERED FLIGHT OPTIONS is empty, return responseType "no_results" with 3-4 actionable filterSuggestions.
 - If any options exist (even 1 or 2), return responseType "suggestions". Never return "no_results" when options are available.
 - Pick the best 3 options. Prefer "strict" options; include "alternative" options when needed to fill 3 slots.
-- For "alternative" options: set isAlternative: true and use tradeOff to clearly explain what differs (e.g., "$80 over your stated budget" or "doesn't match the cultural tag but is a great nearby option").
-- For "strict" options: isAlternative should be false or omitted.
+- For "alternative" options: set isAlternative: true and write a specific tradeOff: if it differs from the pinned city, say e.g. "You asked for Cancun specifically; this is a similar beach option worth considering at $151 less." If it's over budget, say exactly how much over. Be concrete and helpful.
+- For "strict" options: set isAlternative: false, tradeOff: null (unless there's a genuine concern like cold weather).
 - Exactly one suggestion must have isBestValue: true (pick the best value for the user's preferences).
 - CONSTRAINT PRIORITY: city name > dates > stops > budget > tags. Honor higher-priority constraints even if lower ones can't be met.
 
@@ -432,15 +441,27 @@ function parseAndValidateResponse(rawText: string, destinations: Array<{ id: str
   }
 
   if (parsed.responseType === 'suggestions' && parsed.suggestions?.length > 0) {
-    const bestCount = parsed.suggestions.filter((s) => s.isBestValue).length
+    // Rule: isBestValue must NEVER be on an alternative when non-alternatives exist
+    const strictSuggs = parsed.suggestions.filter(s => !s.isAlternative)
+    if (strictSuggs.length > 0) {
+      // Strip bestValue from any alternative the model incorrectly marked
+      parsed.suggestions = parsed.suggestions.map(s => ({
+        ...s,
+        isBestValue: s.isAlternative ? false : s.isBestValue,
+      }))
+    }
+
+    // Ensure exactly one suggestion has isBestValue: true
+    const bestCount = parsed.suggestions.filter(s => s.isBestValue).length
     if (bestCount === 0) {
-      const cheapestIdx = parsed.suggestions.reduce(
-        (mi, s, i, a) => (s.lowestFareUsd < a[mi].lowestFareUsd ? i : mi), 0
-      )
-      parsed.suggestions[cheapestIdx].isBestValue = true
+      // Assign to cheapest in the non-alternative pool (or cheapest overall)
+      const pool = strictSuggs.length > 0 ? strictSuggs : parsed.suggestions
+      const cheapest = pool.reduce((a, b) => a.lowestFareUsd < b.lowestFareUsd ? a : b)
+      const idx = parsed.suggestions.indexOf(cheapest)
+      if (idx >= 0) parsed.suggestions[idx].isBestValue = true
     } else if (bestCount > 1) {
       let found = false
-      parsed.suggestions = parsed.suggestions.map((s) => {
+      parsed.suggestions = parsed.suggestions.map(s => {
         if (s.isBestValue && !found) { found = true; return s }
         return { ...s, isBestValue: false }
       })
