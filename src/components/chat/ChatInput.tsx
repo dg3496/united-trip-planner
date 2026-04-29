@@ -1,10 +1,12 @@
-// TODO (Frontend team): Fixed-bottom text input for the chat.
+// Fixed-bottom text input for the chat.
 // - Send button disabled when input is empty or whitespace (prevent empty sends)
 // - Send button disabled while isLoading
 // - Enter key sends (Shift+Enter for newline)
-// - Input should auto-focus on mount
+// - NO auto-focus on mount: triggering focus programmatically on mobile pops the
+//   keyboard immediately, which causes the entire viewport to scroll up before the
+//   user has a chance to read the conversation. Users tap the input when ready.
 // Keyboard/mobile note: on iOS, a fixed bottom bar shifts up with the software keyboard.
-// Test on iPhone viewport and handle via visualViewport resize if needed.
+// Handled via visualViewport resize listener below.
 
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
 import { Send } from 'lucide-react'
@@ -18,10 +20,6 @@ export function ChatInput({ onSend, isLoading }: Props) {
   const [value, setValue] = useState('')
   const [keyboardOffset, setKeyboardOffset] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  useEffect(() => {
-    textareaRef.current?.focus()
-  }, [])
 
   useEffect(() => {
     const viewport = window.visualViewport
