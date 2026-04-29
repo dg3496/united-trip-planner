@@ -5,6 +5,9 @@
 // - NO auto-focus on mount: triggering focus programmatically on mobile pops the
 //   keyboard immediately, which causes the entire viewport to scroll up before the
 //   user has a chance to read the conversation. Users tap the input when ready.
+// - font-size MUST stay at 16px (text-base) or larger. iOS Safari auto-zooms the
+//   entire viewport when a focused input has font-size < 16px. Using text-sm (14px)
+//   here will cause the keyboard-open zoom bug on every iPhone.
 // Keyboard/mobile note: on iOS, a fixed bottom bar shifts up with the software keyboard.
 // Handled via visualViewport resize listener below.
 
@@ -78,7 +81,7 @@ export function ChatInput({ onSend, isLoading }: Props) {
         onInput={handleInput}
         placeholder="Where do you want to go?"
         rows={1}
-        className="flex-1 resize-none bg-gray-100 rounded-2xl px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003087]/30 max-h-[120px] leading-relaxed"
+        className="flex-1 resize-none bg-gray-100 rounded-2xl px-4 py-2.5 text-base leading-snug text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003087]/30 max-h-[120px]"
       />
       <button
         onClick={handleSend}
