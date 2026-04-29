@@ -1,10 +1,3 @@
-// TODO (Frontend team): Chat UI container
-// Requirements: FR-005 through FR-021
-//
-// Wire together: TopBar + MessageList + ChatInput
-// Pull state from useChatStore()
-// Handle error toasts when store.error is set
-
 import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -19,12 +12,15 @@ export default function Chat() {
   const [searchParams, setSearchParams] = useSearchParams()
   const autoSentRef = useRef(false)
 
-  // Auto-send a pre-written query passed via ?q= (e.g. from Home featured tiles)
+  // Read ?dest= to show destination-specific suggestion chips (no auto-send)
+  const destCode = searchParams.get('dest')
+
+  // Clean up the ?dest= param once we have it stored, but keep it while no messages
   useEffect(() => {
     const q = searchParams.get('q')
     if (q && !autoSentRef.current && messages.length === 0) {
       autoSentRef.current = true
-      setSearchParams({}, { replace: true }) // clean the URL
+      setSearchParams({}, { replace: true })
       sendMessage(q)
     }
   }, [])
@@ -36,6 +32,13 @@ export default function Chat() {
     }
   }, [error, clearError])
 
+  // Once user sends a message, clean the dest param from URL
+  useEffect(() => {
+    if (messages.length > 0 && destCode) {
+      setSearchParams({}, { replace: true })
+    }
+  }, [messages.length])
+
   return (
     <div className="flex flex-col h-full min-h-0 bg-gradient-to-b from-slate-50 to-white">
       <TopBar title="Trip Planner" showBack={false} />
@@ -44,6 +47,7 @@ export default function Chat() {
         isLoading={isLoading}
         conversationId={conversationId}
         onExampleSelect={sendMessage}
+        destCode={destCode}
       />
       <ChatInput onSend={sendMessage} isLoading={isLoading} />
       <BottomNav />
